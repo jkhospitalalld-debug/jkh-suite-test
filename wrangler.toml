@@ -11,4 +11,4 @@ binding = "ASSETS"
 [[d1_databases]]
 binding = "DB"
 database_name = "jkh-suite-test-db"
-database_id = "PASTE_YOUR_DATABASE_ID_HERE"
+database_id = "03f1cbd9-9004-4336-9369-ea21813ab849"
