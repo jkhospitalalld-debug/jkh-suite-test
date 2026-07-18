@@ -1,0 +1,1613 @@
+--<!doctype html>
+<html lang="hi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Referral OPD v9 - J. K. Hospital Dental Care Center</title>
+  <style>
+:root{
+  --bg:#f1f5f9;
+  --card:#ffffff;
+  --muted:#6b7280;
+  --accent:#0b5cff;
+  --primary:#0ea5a4;
+  --danger:#ef4444;
+  --border:#e6e9ef;
+}
+
+/* ⭐ Yeh yahan hona chahiye */
+.tooth-box {
+
+  width:60px;
+
+  height:24px;
+
+  border:1px solid #000;
+
+  text-align:center;
+
+  font-size:14px;
+
+  font-weight:bold;
+
+  padding:2px;
+
+  box-sizing:border-box;
+
+}
+
+
+  
+    *{box-sizing:border-box}
+    body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,'Noto Sans',Arial;margin:0;padding:18px;background:var(--bg);color:#0f172a}
+    .container{max-width:1060px;margin:0 auto}
+    .card{background:var(--card);border-radius:12px;padding:14px;box-shadow:0 8px 28px rgba(11,20,50,0.06);margin-bottom:16px;border:1px solid var(--border)}
+    header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+    .brand{display:flex;gap:12px;align-items:center}
+    .logo{width:56px;height:56px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#06b6d4);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:18px}
+    .clinic h1{margin:0;font-size:20px;color:var(--accent)}
+    .clinic p{margin:0;font-size:13px;color:var(--muted)}
+    .meta{display:flex;gap:10px;align-items:center}
+    .meta .field{display:flex;flex-direction:column;align-items:flex-end}
+    .field input{padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:#fff;font-size:14px}
+    .row{display:flex;gap:12px;margin-top:14px;flex-wrap:wrap}
+    .col{flex:1;min-width:160px}
+    label{font-size:13px;color:var(--muted);margin-bottom:6px;display:block}
+    input[type="text"],input[type="number"],select,textarea{width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:#fff;font-size:15px}
+    textarea{min-height:110px;resize:vertical}
+    .section-title{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+    .procedures, .meds{margin-top:12px}
+    table{width:100%;border-collapse:collapse}
+    thead th{background:#fafcff;padding:10px;border-bottom:1px solid var(--border);text-align:left;font-weight:700}
+    tbody td{padding:10px;border-bottom:1px dashed #f1f3f5;vertical-align:middle}
+    .controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .btn{padding:10px 14px;border-radius:10px;border:0;cursor:pointer;font-weight:700;font-size:14px}
+    .btn-primary{background:var(--accent);color:#fff;box-shadow:0 6px 18px rgba(11,92,255,0.12)}
+    .btn-muted{background:#fff;color:#111;border:1px solid var(--border)}
+    .btn-ghost{background:transparent;border:1px dashed var(--border)}
+    .addBtn{background:var(--primary);color:#fff}
+    .danger-btn{background:var(--danger);color:#fff;padding:8px 10px;border-radius:8px;border:0;cursor:pointer}
+    .small{font-size:13px;color:var(--muted)}
+    .med-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
+    .proc-select{padding:12px;border-radius:10px;border:1px solid var(--border);background:#fff;font-size:15px;height:48px}
+    select.proc-select{min-width:160px}
+    .med-select,.med-dose,.med-duration{padding:10px;border-radius:10px;border:1px solid var(--border);background:#fff;height:44px;font-size:15px}
+    .footer{font-size:13px;color:var(--muted);margin-top:10px;text-align:center}
+    #loginOverlay{position:fixed;inset:0;background:#0f172a;display:flex;align-items:center;justify-content:center;z-index:9999}
+    #loginOverlay .box{background:#fff;padding:28px;border-radius:12px;width:100%;max-width:340px;box-shadow:0 8px 28px rgba(0,0,0,0.3)}
+    #loginOverlay h2{margin:0 0 4px;color:var(--accent);font-size:18px}
+    #loginOverlay p{margin:0 0 16px;color:var(--muted);font-size:13px}
+    #loginOverlay input{width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);margin-bottom:12px;font-size:15px}
+    #loginOverlay button{width:100%;padding:11px;border-radius:8px;border:0;background:var(--accent);color:#fff;font-weight:700;font-size:15px;cursor:pointer}
+    #loginErr{color:var(--danger);font-size:13px;margin-bottom:10px;min-height:16px}
+    #userBar{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);justify-content:flex-end;margin-top:8px}
+    #userBar button{padding:6px 10px;border-radius:8px;border:1px dashed var(--border);background:transparent;cursor:pointer;font-size:13px}
+    @media (max-width:900px){
+      .meta{width:100%;justify-content:space-between}
+      .proc-select{height:44px}
+    }
+    @media print {
+  .no-print { display: none !important; }
+  body {
+    background: #fff;
+    zoom: 0.75;                /* ← shrink to 75% */
+    transform-origin: top left;
+  }
+  .card {
+    box-shadow: none;
+    border-radius: 0;
+    padding: 6px;
+    page-break-inside: avoid;  /* avoid splitting */
+  }
+  table, tr, td, th {
+    font-size: 12px;           /* compact font */
+  }
+}
+
+    }
+  </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+  <div id="loginOverlay">
+    <form class="box" id="loginForm">
+      <h2>J. K. Hospital Dental Care Center</h2>
+      <p>Sign in to continue</p>
+      <div id="loginErr"></div>
+      <input id="loginUser" type="text" placeholder="Username" autocomplete="username" required />
+      <input id="loginPass" type="password" placeholder="Password" autocomplete="current-password" required />
+      <button type="submit" id="loginBtn">Sign in</button>
+    </form>
+  </div>
+  <div class="container">
+    <div id="userBar" class="no-print">
+      <a href="#" id="billingLink" style="text-decoration:none;padding:6px 10px;border-radius:8px;border:1px dashed var(--border);color:var(--accent);font-weight:700">🧾 Billing</a>
+      <span id="whoami"></span>
+      <button id="logoutBtn" type="button">Logout</button>
+    </div>
+    <div class="card">
+      <header>
+        <div class="brand">
+          <div class="logo">
+  <img src="LOGO.jpg" alt="JKH Logo" style="
+    width:80px;
+    height:80px;
+    border-radius:10px;
+    object-fit:contain;
+    background:#fff;
+    border:2px solid #2563eb;
+    padding:4px;">
+</div>
+
+
+
+          <div class="clinic">
+            <h1>J. K. Hospital Dental Care Center</h1>
+            <p>38/53 D Bai Ka Bagh, Prayagraj —CMO Reg 3351/3881  
+		 9450595694 • jkhospitalalld@gmail.com</p>
+            
+	    
+          </div>
+        </div>
+
+        <div class="meta">
+          <div class="field">
+            <label class="small">UHID</label>
+            <input id="uhid" type="text" readonly />
+          </div>
+          <div class="field">
+            <label class="small">Date</label>
+            <input id="date" type="date" />
+          </div>
+          <div class="field">
+            <label class="small">Bill No (linked)</label>
+            <input id="billno" type="text" placeholder="No bill yet" readonly style="background:#f1f5f9;cursor:not-allowed" />
+          </div>
+        </div>
+      </header>
+    </div>
+
+    <div class="card">
+      <div class="row">
+        <div class="col">
+          <label>NAME</label>
+          <input id="name" type="text" placeholder="Mr / Ms / Child name" />
+        </div>
+        <div style="width:110px">
+          <label>AGE</label>
+          <input id="age" type="number" min="0" />
+        </div>
+        <div style="width:120px">
+          <label>SEX</label>
+          <select id="sex"><option>M</option><option>F</option><option>Other</option></select>
+        </div>
+        <div style="min-width:200px;flex:0.9">
+          <label>PMH (Past Medical History)</label>
+          <input id="pmh" type="text" placeholder="e.g. NA or HTN, DM etc." />
+        </div>
+        <div class="row">
+  <div class="col">
+    <label>CHIEF COMPLAINT/Adv TEST</label>
+    <textarea id="cc"></textarea>
+  </div>
+</div>
+      
+
+      <!-- Procedures -->
+      <div class="procedures">
+        <div class="section-title">
+          <strong>Procedures</strong>
+          <div class="controls no-print">
+            <button id="openMaster" class="btn btn-muted">Open Master List</button>
+            <button id="exportCsv" class="btn btn-ghost">Export CSV (procedures)</button>
+          </div>
+        </div>
+
+        <div style="margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <select id="proc_code" class="proc-select" aria-label="Procedure code" style="width:120px;padding:10px;border-radius:10px;border:1px solid var(--border)" ><option value="">--Code--</option></select>
+          <select id="proc_name" class="proc-select" aria-label="Procedure name" style="width:340px;padding:10px;border-radius:10px;border:1px solid var(--border)" ><option value="">--Procedure--</option></select>
+          <input id="proc_qty" type="number" min="1" value="1" style="width:120px;padding:10px;border-radius:10px;border:1px solid var(--border)" />
+          <button id="addProc" class="btn addBtn">Add Procedure</button>
+          <input id="proc_search" placeholder="Tooth number Rt/Lt Upp/Low" style="margin-left:auto;padding:10px;border-radius:10px;border:1px solid var(--border);min-width:240px" />
+         </div>
+
+   <table style="margin-top:12px">
+  <thead>
+    <tr>
+      <th style="width:18%">Code</th>
+      <th>Procedure</th>
+      <th style="width:240px">Boxes</th>
+      <th style="width:12%">Qty (No.)</th>
+      <th style="width:10%" class="no-print">Del</th>
+    </tr>
+  </thead>
+
+  <!-- ⭐ THIS WAS MISSING — ULTRA IMPORTANT -->
+  <tbody id="proc_body"></tbody>
+
+</table>
+
+
+
+      <!-- Medicines -->
+      <div class="meds">
+        <div class="section-title" style="margin-top:18px">
+          <strong>Prescription / Medicines</strong>
+          <div class="controls no-print">
+            <button id="savePatient" class="btn btn-primary">Save Patient</button>
+            <button id="newPatient" class="btn btn-muted">New Patient</button>
+          </div>
+        </div>
+
+        <div class="med-controls">
+          <select id="med_category" class="med-select proc-select" aria-label="Medicine category"style="width:100px" >
+            <option value="">--Category--</option>
+            <option value="TAB">TABLETS (TAB)</option>
+            <option value="CAP">CAPSULES (CAP)</option>
+            <option value="SYP">SYRUPS (SYP)</option>
+            <option value="MOUTHWASH">MOUTH WASH</option>
+            <option value="GEL">GELS / OINTMENTS</option>
+            <option value="FLOSS">PROXA BRUSH / FLOSS</option>
+               </select>
+
+          <select id="med_dropdown" class="med-select" aria-label="Medicine name" style="width:410px" >
+            <option value="">--Select Medicine--</option>
+          </select>
+
+          <select id="med_dose" class="med-dose" style="width:80px"> 
+<option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>'INPUT'</option>
+ 
+          </select>
+
+          <select id="med_freq" class="med-select" style="width:80px" >
+            <option>OD</option><option>BD</option><option>TDS</option><option>QID</option><option>HS</option><option>SOS</option> 
+ 
+          </select>
+
+          <select id="med_duration" class="med-duration" placeholder="Duration (days)_dropdown" style="width:120px" >
+<option>1day</option><option>2days</option><option>3days</option><option>4days</option><option>5days</option><option>6days</option><option>7days</option>
+ 
+          </select>
+          <button id="addMed" class="btn addBtn">+ Add Row</button>
+        </div>
+
+        <div style="margin-top:10px" class="small">Select Category → Select Medicine → Dose (default 1) → Frequency → Duration → Add Row</div>
+
+        <table class="med-table" style="margin-top:12px">
+          <thead><tr><th style="width:6%">#</th><th>Medicine</th><th style="width:16%">Dose</th><th style="width:14%">Frequency</th><th style="width:14%">Duration</th><th style="width:8%" class="no-print">Del</th></tr></thead>
+          <tbody id="med_body"></tbody>
+        </table>
+      </div>
+      <!-- ================= VISIT HISTORY ================= -->
+
+<div class="section-title" style="margin-top:22px">
+    <strong>Visit History</strong>
+
+    <div class="controls no-print">
+        <button id="addVisit" class="btn addBtn">
+            + Add Visit
+        </button>
+    </div>
+</div>
+
+<table class="visit-table" style="margin-top:10px">
+
+<thead>
+
+<tr>
+
+<th style="width:13%">Date</th>
+
+<th style="width:28%">Procedure</th>
+
+<th style="width:150px">Tooth</th>
+
+<th>Clinical Notes</th>
+
+<th style="width:14%">Next Visit</th>
+
+<th style="width:8%" class="no-print">Del</th>
+
+</tr>
+
+</thead>
+
+<tbody id="visit_body">
+
+</tbody>
+
+</table>  
+      <div style="margin-top:16px;display:flex;justify-content:space-between;align-items:center;gap:10px">
+        <div class="small">Theme: Stylish clinic • Save as <strong>referral_opd_v9.html</strong></div>
+        <div class="controls no-print">
+          <button id="saveRx" class="btn btn-muted">Save Rx</button>
+          <button id="viewSaved" class="btn btn-muted">Saved Patients</button>
+          <button id="printRx" class="btn btn-muted">Print Rx Only</button>
+          <button id="printBtn" class="btn btn-primary">Print Full</button>
+          <button id="clearBtn" class="btn btn-ghost">Clear All</button>
+	  <button id="exportJSON" class="btn btn-muted">Export Backup</button>
+	  <button id="importJSON" class="btn btn-muted">Import Backup</button>
+	  <input type="file" id="jsonFile" accept=".json" style="display:none">
+
+        </div>
+      </div>
+    </div>
+
+    <div class="footer small">Generated for J. K. Hospital — UHID auto from Bill No or date-based counter. SIGN & STAMP</div>
+  </div>
+
+  <!-- Master modal -->
+  <div id="masterModal" class="no-print" style="display:none;position:fixed;inset:0;background:rgba(2,6,23,0.45);align-items:center;justify-content:center;padding:12px">
+    <div style="background:#fff;border-radius:10px;max-width:980px;width:100%;padding:12px;max-height:86vh;overflow:auto">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <strong>Master Procedure List</strong>
+        <div>
+          <input id="master_filter" placeholder="Filter master list..." style="padding:8px;border:1px solid var(--border);border-radius:8px;margin-right:8px" />
+          <button class="btn btn-muted" id="closeMaster">Close</button>
+        </div>
+      </div>
+      <table style="width:100%"><thead><tr><th style="width:18%">Code</th><th>Procedure</th><th style="width:12%">Add</th></tr></thead><tbody id="master_body"></tbody></table>
+    </div>
+  </div>
+
+<div id="savedModal" class="no-print" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;">
+  <div style="background:#fff;padding:15px;border-radius:10px;width:90%;max-width:800px;max-height:80vh;overflow:auto">
+    <div style="display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:10px;">
+
+<h3 style="margin:0">
+Saved Patients
+</h3>
+
+<button
+onclick="document.getElementById('savedModal').style.display='none'"
+class="btn btn-muted">
+
+✕ Close
+
+</button>
+
+</div>
+    <input id="savedSearch" placeholder="Search by name / UHID..."
+style="width:100%;padding:8px;margin-bottom:10px;border:1px solid #ccc;border-radius:8px">
+    <table style="width:100%;border-collapse:collapse">
+      <thead>
+        <tr>
+          <th>UHID</th>
+          <th>Name</th>
+          <th>Created</th>
+          <th>Load</th>
+          <th>Delete</th>
+        </tr>
+      </thead>
+      <tbody id="savedBody"></tbody>
+    </table>
+    
+  </div>
+</div>
+<script>
+/* ================= LOGIN / API SYNC ================= */
+const API_BASE = ''; // same-origin now, served from this same Worker
+let AUTH_TOKEN = localStorage.getItem('jkh_token') || null;
+let AUTH_USER = JSON.parse(localStorage.getItem('jkh_user') || 'null');
+
+function showLogin() { document.getElementById('loginOverlay').style.display = 'flex'; }
+function hideLogin() { document.getElementById('loginOverlay').style.display = 'none'; }
+
+if (AUTH_TOKEN) { hideLogin(); } else { hideLogin(); } // login disabled - always hidden
+
+function updateWhoami() {
+  const el = document.getElementById('whoami');
+  if (el) el.textContent = AUTH_USER ? `${AUTH_USER.full_name || AUTH_USER.username} (${AUTH_USER.role})` : '';
+}
+updateWhoami();
+
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const errEl = document.getElementById('loginErr');
+  const btn = document.getElementById('loginBtn');
+  errEl.textContent = '';
+  btn.disabled = true; btn.textContent = 'Signing in...';
+  try {
+    const res = await fetch(API_BASE + '/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: document.getElementById('loginUser').value.trim(),
+        password: document.getElementById('loginPass').value
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Login failed');
+    AUTH_TOKEN = data.token; AUTH_USER = data.user;
+    localStorage.setItem('jkh_token', AUTH_TOKEN);
+    localStorage.setItem('jkh_user', JSON.stringify(AUTH_USER));
+    updateWhoami();
+    hideLogin();
+  } catch (err) {
+    errEl.textContent = err.message;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Sign in';
+  }
+});
+
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  AUTH_TOKEN = null; AUTH_USER = null;
+  localStorage.removeItem('jkh_token'); localStorage.removeItem('jkh_user');
+  showLogin();
+});
+
+document.getElementById('billingLink').addEventListener('click', (e) => {
+  e.preventDefault();
+  const params = new URLSearchParams({
+    uhid: document.getElementById('uhid').value || '',
+    name: document.getElementById('name').value || '',
+    age: document.getElementById('age').value || '',
+    sex: document.getElementById('sex').value || ''
+  });
+  window.location.href = '/billing.html?' + params.toString();
+});
+
+// Wrapper around fetch that adds the login token and gracefully handles
+// being offline or logged out - callers should not assume this always succeeds.
+async function apiFetch(path, opts = {}) {
+  const res = await fetch(API_BASE + path, {
+    ...opts,
+    headers: { 'Content-Type': 'application/json', ...(AUTH_TOKEN ? { Authorization: 'Bearer ' + AUTH_TOKEN } : {}), ...(opts.headers || {}) },
+    body: opts.body ? JSON.stringify(opts.body) : undefined
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
+
+const KEY_REGISTRY = 'ref_patient_registry_v9';
+const SYSTEM_ID ="M";   // 🔁 yahan change karna (A, B, C…)
+let registry = loadJSON(KEY_REGISTRY) || [ ];
+
+
+/* ----------------- MASTER PROCEDURES --------------- */
+let MASTER = [];  // loaded from /api/procedures at runtime (shared with Billing)
+
+/* ------------- MEDICINE CATEGORIES ------------- */
+const MED_CATEGORIES = {
+  "TAB": [
+"Tab MOXIND CV 625","Tab MOXIND CV 375","Tab CLAVUM 625","Tab BLESSMOX CV 625",
+"Tab AUGMENTIN 625","Tab AUGMENTIN 375","Tab CEFTUM 500","Tab CEFAKIND 250","GUDCEF 200",
+"Tab LEVOFLOX 500","Tab ZENFLOX OZ","Tab CIPROFLOX 500","Tab METROGYL ER",
+"Tab METROGYL 400","Tab HYFENAC P","Tab FLOZEN PLUS","Tab JIYAGESIC P",
+"Tab COMBIFLAME","Tab ULTRACET","Tab ACECLOFENAC +PARACETAMOL","Tab ACEFLAME P",
+"Tab NIMUSULIDE PARACTAMOL","Tab DOLOKIND PLUS","Tab DOLOKIND AA",
+"Tab DICLOFENAC+PCM","Tab NOBEL MR","Tab PANTOP D","Tab PANTAKIND DSR",
+"Tab RANITIDINE 150/300","Tab ACELOC 300","Tab CHYMORAL FORT","Tab CLONAFIT 0.25 mg 1 TAB SOS/hs"
+  ],
+  "CAP": [
+"Cap OMEPRAZOLE","Cap VIZYLZC"
+  ],
+  "SYP": [
+"Syp AUGMENTIN","Syp IBUGESIC P"
+  ],
+  "MOUTHWASH": [
+"BETADINE GARGLE","BETAKIND GARGLE","THERMOKIND MOUTH WASH"
+  ],
+  "GEL": [
+"ORNIGRATE GEL","METROGYLDG GEL","HEXIMETRO GEL","ORAWAYS GEL",
+"TURBOCORT GEL","KENACORT GEL","TESS GEL","MUCOPAIN GEL","SENOLIN SF GEL"
+  ],
+  "FLOSS": [
+"THERMOKIND TOOTHPASTE","THERMOSEAL DENTAL FLOSS","THERMOSEAL PROXA BRUSH"
+  ]
+};
+
+
+
+/* ------------- storage keys ------------- */
+const KEY_ITEMS = 'ref_items_v9';
+const KEY_MED = 'ref_meds_v9';
+const KEY_FORM = 'ref_form_v9';
+const KEY_VISITS = 'ref_visits_v9';
+
+
+
+/* ------------- DOM ------------- */
+const uhidEl=document.getElementById('uhid'), dateEl=document.getElementById('date'), billEl=document.getElementById('billno'),
+nameEl=document.getElementById('name'), ageEl=document.getElementById('age'), sexEl=document.getElementById('sex'), pmhEl=document.getElementById('pmh');
+const ccEl = document.getElementById('cc');
+const procCode=document.getElementById('proc_code'), procName=document.getElementById('proc_name'), procQty=document.getElementById('proc_qty'),
+addProc=document.getElementById('addProc'), procBody=document.getElementById('proc_body'), procSearch=document.getElementById('proc_search');
+
+const openMaster=document.getElementById('openMaster'), masterModal=document.getElementById('masterModal'), masterBody=document.getElementById('master_body'),
+masterFilter=document.getElementById('master_filter'), closeMaster=document.getElementById('closeMaster');
+
+const medCategory=document.getElementById('med_category'),
+medDropdown=document.getElementById('med_dropdown'),
+medDose=document.getElementById('med_dose'),
+medFreq=document.getElementById('med_freq'),
+medDuration=document.getElementById('med_duration'),
+addMedBtn=document.getElementById('addMed'),
+medBody=document.getElementById('med_body'),
+
+visitBody=document.getElementById('visit_body'),
+addVisitBtn=document.getElementById('addVisit');
+
+const exportBtn=document.getElementById('exportCsv'), newPatientBtn=document.getElementById('newPatient'), clearBtn=document.getElementById('clearBtn'),
+savePatientBtn=document.getElementById('savePatient'), saveRxBtn=document.getElementById('saveRx'), printRxBtn=document.getElementById('printRx'),
+printBtn=document.getElementById('printBtn');
+
+let items = loadJSON(KEY_ITEMS) || [];
+let meds = loadJSON(KEY_MED) || [];
+let form = loadJSON(KEY_FORM) || {};
+let visits = loadJSON(KEY_VISITS) || [];
+
+/* ------------- init ------------- */
+async function loadMasterProcedures(){
+  try {
+    const data = await apiFetch('/api/procedures');
+    MASTER = data.map(p => ({ code: p.code, procedure: p.name, rate: p.rate }));
+  } catch (e) {
+    console.error('Could not load procedure list from server:', e.message);
+    alert('⚠️ Could not load procedure list from server.');
+  }
+}
+
+async function init(){
+
+  const today=new Date();
+
+  await loadMasterProcedures();
+
+  const incomingUHID = new URLSearchParams(window.location.search).get('uhid');
+  if (incomingUHID) {
+    try {
+      const data = await apiFetch('/api/patients/' + encodeURIComponent(incomingUHID));
+      populateProcedureSelects();
+      populateMedDropdown();
+      loadPatient(data);
+      return;
+    } catch (e) {
+      console.warn('Could not load patient from URL, starting fresh:', e.message);
+    }
+  }
+
+  dateEl.value=form.date||today.toISOString().slice(0,10);
+
+  nameEl.value=form.name||'';
+
+  ageEl.value=form.age||'';
+
+  sexEl.value=form.sex||'M';
+
+  pmhEl.value=form.pmh||'';
+
+  billEl.value=form.billno||'';
+
+  populateProcedureSelects();
+
+  populateMedDropdown();
+
+  renderMeds();
+
+  renderItems();
+
+  renderVisits();
+
+  updateUHID();
+
+}
+init();
+
+async function refreshLinkedBill(){
+  const uhid = uhidEl.value;
+  if (!uhid) { billEl.value=''; return; }
+  try {
+    const res = await fetch(API_BASE + '/api/bills/by-patient/' + encodeURIComponent(uhid));
+    if (!res.ok) throw new Error('server error');
+    const bills = await res.json();
+    billEl.value = bills.length ? bills[0].no : '';
+  } catch (e) {
+    console.warn('Could not check for linked bill:', e.message);
+  }
+}
+
+/* ------------- UHID ------------- */
+function genUHID_local(){
+  const dateVal=dateEl.value||new Date().toISOString().slice(0,10);
+  const d=new Date(dateVal);
+  const yyyy=d.getFullYear();
+  const mm=String(d.getMonth()+1).padStart(2,'0');
+  const dd=String(d.getDate()).padStart(2,'0');
+  const dayKey=`${yyyy}${mm}${dd}`;
+  const counterKey=`uhid_counter_v10_${dayKey}`;
+  let cnt=Number(localStorage.getItem(counterKey)||0);
+  if(form.uhid && form.date && form.date===dateVal && form.uhid.startsWith(`${dayKey}${SYSTEM_ID}`))
+    return form.uhid;
+  cnt=cnt+1;
+  localStorage.setItem(counterKey,String(cnt));
+  return `${dayKey}${SYSTEM_ID}${String(cnt).padStart(4,'0')}`;
+}
+
+async function genUHID(){
+  // If editing an existing patient loaded from a save, keep its UHID as-is.
+  const dateVal = dateEl.value || new Date().toISOString().slice(0,10);
+  const d = new Date(dateVal);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const dd = String(d.getDate()).padStart(2,'0');
+  const dayKey = `${yyyy}${mm}${dd}`;
+  if (form.uhid && form.date && form.date === dateVal && form.uhid.startsWith(`${dayKey}${SYSTEM_ID}`)) {
+    return form.uhid;
+  }
+  try {
+    const params = new URLSearchParams({ date: dateVal, system: SYSTEM_ID });
+    const res = await fetch(API_BASE + '/api/next-uhid?' + params.toString());
+    if (!res.ok) throw new Error('server error');
+    const data = await res.json();
+    return data.uhid;
+  } catch (e) {
+    console.warn('Could not reach server for UHID, using local counter (may clash with other devices):', e.message);
+    return genUHID_local();
+  }
+}
+async function updateUHID(){ uhidEl.value = await genUHID(); form.uhid = uhidEl.value; saveForm(); refreshLinkedBill(); }
+
+/* ------------- procedures populate & sync ------------- */
+function populateProcedureSelects(){ procCode.innerHTML='<option value="">--Code--</option>'; procName.innerHTML='<option value="">--Procedure--</option>'; MASTER.forEach(m=>{ const oc=document.createElement('option'); oc.value=m.code; oc.textContent=m.code; procCode.appendChild(oc); const on=document.createElement('option'); on.value=m.code; on.textContent=m.procedure; procName.appendChild(on); }); procCode.addEventListener('change', ()=>{ const code=procCode.value; procName.value=code||''; }); procName.addEventListener('change', ()=>{ const code=procName.value; procCode.value=code||''; }); }
+
+/* quick-add via procSearch (Enter) */
+procSearch.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); const q=procSearch.value.trim().toLowerCase(); if(!q) return; let found=MASTER.find(m=>m.code.toLowerCase()===q); if(!found) found=MASTER.find(m=>m.procedure.toLowerCase().includes(q)); if(found){ items.push({code:found.code,procedure:found.procedure,no:Number(procQty.value)||1}); saveItems(); renderItems(); procSearch.value=''; } else alert('Procedure nahi mila in master list.'); } });
+
+/* add procedure */
+addProc.addEventListener('click', ()=>{ const code=procCode.value||procName.value; if(!code){ alert('Code ya Procedure select karo.'); return; } const m=MASTER.find(x=>x.code===code); if(!m){ alert('Selected code/procedure invalid.'); return; } const qty=Math.max(1,Number(procQty.value)||1); items.push({code:m.code,procedure:m.procedure,no:qty}); saveItems(); renderItems(); procCode.selectedIndex=0; procName.selectedIndex=0; procQty.value=1; });
+
+/* render procedures */
+function renderItems() {
+  procBody.innerHTML = '';
+
+  if (items.length === 0) {
+    procBody.innerHTML =
+      '<tr><td colspan="5" class="small" style="padding:12px;text-align:center;color:#6b7280">No procedures added yet.</td></tr>';
+    return;
+  }
+
+  items.forEach((it, idx) => {
+
+    if (!it.boxes) it.boxes = ["", "", "", ""];
+
+    const tr = document.createElement('tr');
+
+    tr.innerHTML = `
+      <td style="vertical-align:middle">${esc(it.code)}</td>
+
+      <td style="vertical-align:middle">${esc(it.procedure)}</td>
+
+      <td style="vertical-align:middle">
+        <table style="border-collapse:collapse;">
+          <tr>
+            <td><input class="tooth-box" type="text" data-box="0" data-idx="${idx}" value="${it.boxes[0]}"></td>
+            <td><input class="tooth-box" type="text" data-box="1" data-idx="${idx}" value="${it.boxes[1]}"></td>
+          </tr>
+          <tr>
+            <td><input class="tooth-box" type="text" data-box="2" data-idx="${idx}" value="${it.boxes[2]}"></td>
+            <td><input class="tooth-box" type="text" data-box="3" data-idx="${idx}" value="${it.boxes[3]}"></td>
+          </tr>
+        </table>
+      </td>
+
+      <td style="vertical-align:middle">
+        <input type="number" min="1" value="${it.no || 1}" data-idx="${idx}"
+          style="width:96px;padding:8px;border-radius:8px;border:1px solid #eee"/>
+      </td>
+
+      <td style="text-align:center;vertical-align:middle" class="no-print">
+        <button data-del="${idx}" class="danger-btn">Del</button>
+      </td>
+    `;
+
+    procBody.appendChild(tr);
+  });
+
+
+  /* ⭐ SAVE TOOTH BOX VALUES */
+  procBody.querySelectorAll('.tooth-box').forEach(box => {
+    box.addEventListener('input', e => {
+      const i = Number(e.target.dataset.idx);
+      const b = Number(e.target.dataset.box);
+
+      items[i].boxes[b] = e.target.value;
+      saveItems();
+    });
+  });
+
+  /* ⭐ QTY CHANGE */
+  procBody.querySelectorAll('input[type="number"]').forEach(inp => {
+    inp.addEventListener('change', e => {
+      const i = Number(e.target.dataset.idx);
+      items[i].no = Math.max(1, Number(e.target.value) || 1);
+      saveItems();
+    });
+  });
+
+  /* ⭐ DELETE ROW */
+  procBody.querySelectorAll('button[data-del]').forEach(b => {
+    b.addEventListener('click', () => {
+      const i = Number(b.getAttribute('data-del'));
+      items.splice(i, 1);
+      saveItems();
+      renderItems();
+    });
+  });
+
+}
+
+
+
+/* master modal */
+openMaster.addEventListener('click', ()=>{ masterModal.style.display='flex'; masterFilter.value=''; renderMaster(); });
+closeMaster.addEventListener('click', ()=>{ masterModal.style.display='none'; });
+function renderMaster(){ const q=(masterFilter.value||'').trim().toLowerCase(); masterBody.innerHTML=''; const list=MASTER.filter(m=>{ if(!q) return true; return m.code.toLowerCase().includes(q)||m.procedure.toLowerCase().includes(q); }); if(list.length===0){ masterBody.innerHTML='<tr><td colspan="3" style="padding:12px;color:#6b7280;text-align:center">No procedures found.</td></tr>'; return; } list.forEach(m=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td style="padding:8px">${esc(m.code)}</td><td style="padding:8px">${esc(m.procedure)}</td><td style="padding:8px;text-align:center"><button data-add="${m.code}" class="addBtn">Add</button></td>`; masterBody.appendChild(tr); }); masterBody.querySelectorAll('button[data-add]').forEach(b=>{ b.addEventListener('click',()=>{ const code=b.getAttribute('data-add'); const m=MASTER.find(x=>x.code===code); if(m){ items.push({code:m.code,procedure:m.procedure,no:1}); saveItems(); renderItems(); masterModal.style.display='none'; } }); }); }
+masterFilter.addEventListener('input', renderMaster);
+
+/* ------------- MEDICINES: populate by category, add, render ------------- */
+function populateMedDropdown(category){
+  medDropdown.innerHTML = '<option value="">--Select Medicine--</option>';
+  if(!category || !MED_CATEGORIES[category]) return;
+  MED_CATEGORIES[category].forEach(m=>{
+    const o=document.createElement('option'); o.value=m; o.textContent=m; medDropdown.appendChild(o);
+  });
+}
+medCategory.addEventListener('change', ()=>{ populateMedDropdown(medCategory.value); });
+
+addMedBtn.addEventListener('click', ()=>{
+  if(!medDropdown.value){ alert('Medicine select karo'); return; }
+  if(!medDose.value.trim()) medDose.value = "1";
+  const name = medDropdown.value;
+  const dose = medDose.value.trim();
+  const freq = medFreq.value.trim();
+  const duration = medDuration.value.trim();
+  meds.push({name,dose,freq,duration});
+  saveMeds(); renderMeds();
+  medCategory.selectedIndex=0; medDropdown.innerHTML='<option value="">--Select Medicine--</option>'; medDose.value=''; medFreq.selectedIndex=0; medDuration.value='';
+});
+
+/* render meds */
+function renderMeds(){ medBody.innerHTML=''; if(meds.length===0){ medBody.innerHTML='<tr><td colspan="6" style="padding:10px;text-align:center;color:#6b7280">No medicines added.</td></tr>'; return; } meds.forEach((md,idx)=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td style="text-align:center;vertical-align:middle">${idx+1}</td><td style="vertical-align:middle">${esc(md.name)}</td><td style="text-align:center;vertical-align:middle">${esc(md.dose)}</td><td style="text-align:center;vertical-align:middle">${esc(md.freq)}</td><td style="text-align:center;vertical-align:middle">${esc(md.duration)}</td><td style="text-align:center;vertical-align:middle" class="no-print"><button data-md-del="${idx}" class="danger-btn">Del</button></td>`; medBody.appendChild(tr); }); medBody.querySelectorAll('button[data-md-del]').forEach(b=>{ b.addEventListener('click', ()=>{ const i=Number(b.getAttribute('data-md-del')); meds.splice(i,1); saveMeds(); renderMeds(); }); }); }
+
+/* ------------- VISIT HISTORY ------------- */
+
+function saveVisits() {
+  localStorage.setItem(KEY_VISITS, JSON.stringify(visits));
+}
+
+function renderVisits() {
+
+  visitBody.innerHTML = '';
+
+  if (visits.length === 0) {
+    visitBody.innerHTML = `
+      <tr>
+        <td colspan="6"
+            style="text-align:center;
+                   padding:12px;
+                   color:#6b7280">
+          No Visit History
+        </td>
+      </tr>`;
+    return;
+  }
+
+  visits.forEach((v, idx) => {
+
+    const tr = document.createElement("tr");
+
+    let options =
+      `<option value="">--Procedure--</option>`;
+
+    MASTER.forEach(p => {
+      options += `
+      <option value="${p.code}"
+        ${v.code===p.code ? "selected" : ""}>
+        ${esc(p.procedure)}
+      </option>`;
+    });
+
+    tr.innerHTML = `
+
+<td>
+<input type="date"
+       value="${v.date}"
+       data-date="${idx}">
+</td>
+
+<td>
+<select data-proc="${idx}">
+${options}
+</select>
+</td>
+
+<td>
+
+<table style="border-collapse:collapse">
+
+<tr>
+
+<td><input class="tooth-box"
+data-row="${idx}"
+data-box="0"
+value="${v.boxes[0]}"></td>
+
+<td><input class="tooth-box"
+data-row="${idx}"
+data-box="1"
+value="${v.boxes[1]}"></td>
+
+</tr>
+
+<tr>
+
+<td><input class="tooth-box"
+data-row="${idx}"
+data-box="2"
+value="${v.boxes[2]}"></td>
+
+<td><input class="tooth-box"
+data-row="${idx}"
+data-box="3"
+value="${v.boxes[3]}"></td>
+
+</tr>
+
+</table>
+
+</td>
+
+<td>
+
+<input type="text"
+value="${esc(v.notes)}"
+data-note="${idx}"
+placeholder="Clinical Notes"
+style="
+width:100%;
+min-width:280px;
+padding:8px;
+border:1px solid #ddd;
+border-radius:6px;
+">
+
+</td>
+
+<td>
+
+<input type="date"
+value="${v.next}"
+data-next="${idx}">
+
+</td>
+
+<td class="no-print">
+
+<button class="danger-btn"
+data-delvisit="${idx}">
+Del
+</button>
+
+</td>
+
+`;
+
+    visitBody.appendChild(tr);
+
+  });
+
+  /* DATE */
+
+  visitBody.querySelectorAll("[data-date]").forEach(el=>{
+
+    el.onchange=()=>{
+
+      visits[el.dataset.date].date=el.value;
+
+      saveVisits();
+
+    };
+
+  });
+
+  /* PROCEDURE */
+
+  visitBody.querySelectorAll("[data-proc]").forEach(el=>{
+
+    el.onchange=()=>{
+
+      visits[el.dataset.proc].code=el.value;
+
+      saveVisits();
+
+    };
+
+  });
+
+  /* NOTES */
+
+  visitBody.querySelectorAll("[data-note]").forEach(el=>{
+
+    el.oninput=()=>{
+
+      visits[el.dataset.note].notes=el.value;
+
+      saveVisits();
+
+    };
+
+  });
+
+  /* NEXT */
+
+  visitBody.querySelectorAll("[data-next]").forEach(el=>{
+
+    el.onchange=()=>{
+
+      visits[el.dataset.next].next=el.value;
+
+      saveVisits();
+
+    };
+
+  });
+
+  /* TOOTH BOX */
+
+  visitBody.querySelectorAll(".tooth-box").forEach(el=>{
+
+    el.oninput=()=>{
+
+      const r = Number(el.dataset.row);
+      const b = Number(el.dataset.box);
+
+      visits[r].boxes[b]=el.value;
+
+      saveVisits();
+
+    };
+
+  });
+
+  /* DELETE */
+
+  visitBody.querySelectorAll("[data-delvisit]").forEach(btn=>{
+
+    btn.onclick=()=>{
+
+      const i=Number(btn.dataset.delvisit);
+
+      visits.splice(i,1);
+
+      saveVisits();
+
+      renderVisits();
+
+    };
+
+  });
+
+}
+
+/* ------------- Export CSV (procedures only) ------------- */
+exportBtn.addEventListener('click', ()=>{
+  const headers=['BillNo','UHID','Date','PatientName','Age','Sex','PMH','Code','Procedure','No'];
+  const base={bill:billEl.value||'',uhid:uhidEl.value||'',date:dateEl.value||'',name:nameEl.value||'',age:ageEl.value||'',sex:sexEl.value||'',pmh:pmhEl.value||''};
+  const rows=[];
+  if(items.length===0){ if(!confirm('Koi procedure list nahi hai — phir bhi CSV export karna hai?')) return; rows.push([base.bill,base.uhid,base.date,base.name,base.age,base.sex,base.pmh,'','','']); } else items.forEach(it=>rows.push([base.bill,base.uhid,base.date,base.name,base.age,base.sex,base.pmh,it.code,it.procedure,it.no]));
+  const csv=[headers,...rows].map(r=>r.map(c=>`"${String(c||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`referral_${base.uhid || Date.now()}.csv`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+});
+
+/* ------------- ADD VISIT ------------- */
+
+addVisitBtn.addEventListener('click', () => {
+
+  visits.push({
+
+    date: new Date().toISOString().slice(0,10),
+
+    code: "",
+
+    boxes: ["","","",""],
+
+    notes: "",
+
+    next: ""
+
+  });
+
+  saveVisits();
+
+  renderVisits();
+
+});
+
+/* ------------- Print handlers ------------- */
+printBtn.addEventListener('click', ()=>{ saveAll(); window.print(); });
+printRxBtn.addEventListener('click', ()=>{ saveAll(); const rxHtml=buildRxHtml(); const w=window.open('','_blank','width=700,height=900'); w.document.open(); w.document.write(rxHtml); w.document.close(); w.focus(); setTimeout(()=>w.print(),500); });
+
+/* ------------- New Patient & Clear ------------- */
+newPatientBtn.addEventListener('click', ()=>{
+  if(!confirm('Naya patient shuru karna hai? (Pehle wale data clear ho jayenge)')) return;
+  items=[];
+meds=[];
+visits=[];
+form={};
+  localStorage.removeItem(KEY_ITEMS);
+localStorage.removeItem(KEY_MED);
+localStorage.removeItem(KEY_VISITS);
+  nameEl.value=''; ageEl.value=''; sexEl.value='M'; pmhEl.value=''; billEl.value='';
+  dateEl.value = new Date().toISOString().slice(0,10);
+  updateUHID(); renderItems();
+renderMeds();
+renderVisits(); saveAll();
+  alert('New patient form ready ✅');
+});
+
+clearBtn.addEventListener('click', ()=>{
+  if(!confirm('Sare fields aur saved local data clear karein?')) return;
+  localStorage.removeItem(KEY_ITEMS);
+localStorage.removeItem(KEY_MED);
+localStorage.removeItem(KEY_FORM);
+localStorage.removeItem(KEY_VISITS);
+  items=[];
+meds=[];
+visits=[];
+form={};
+  nameEl.value=''; ageEl.value=''; sexEl.value='M'; pmhEl.value=''; billEl.value='';
+  dateEl.value = new Date().toISOString().slice(0,10);
+  updateUHID(); renderItems();
+renderMeds();
+renderVisits();
+});
+
+/* ------------- Save Patient as PDF (Clean Version) ------------- */
+savePatientBtn.addEventListener('click', ()=>{
+
+  saveAll();
+
+  const dt = dateEl.value || new Date().toISOString().slice(0,10);
+  const rawName = nameEl.value || "Patient";
+  const rawUHID = uhidEl.value || "UHID";
+
+  const safeName = rawName.replace(/[^a-zA-Z0-9]/g,'_');
+  const safeUHID = rawUHID.replace(/\//g,'-');
+
+  const fileName = `${safeName}_${safeUHID}_${dt}.pdf`;
+
+  // Generate same Rx HTML as Print Rx
+  const rxHtml = buildRxHtml();
+
+  // Temporary container
+  const container = document.createElement("div");
+  container.innerHTML = rxHtml;
+  document.body.appendChild(container);
+
+const opt = {
+  margin: [10, 10, 10, 10],   // top, left, bottom, right
+  filename: fileName,
+  image: { type: 'jpeg', quality: 1 },
+  html2canvas: { 
+    scale: 1.5,
+    scrollY: 0
+  },
+  jsPDF: { 
+    unit: 'mm', 
+    format: 'a4', 
+    orientation: 'portrait' 
+  },
+  pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+};
+  
+
+  html2pdf().set(opt).from(container).save().then(()=>{
+    document.body.removeChild(container);
+  });
+
+});
+
+/* ------------- Save Rx (local) ------------- */
+saveRxBtn.addEventListener('click', () => {
+
+  saveAll();
+
+  const patientData = {
+  id: uhidEl.value,
+  form: {...form},
+  items: [...items],
+  meds: [...meds],
+  visits: [...visits],
+  savedAt: new Date().toISOString()
+};
+
+  const existingIndex = registry.findIndex(p => p.id === patientData.id);
+  patientData.createdAt = (existingIndex >= 0 && registry[existingIndex].createdAt)
+    ? registry[existingIndex].createdAt
+    : patientData.savedAt;
+
+  if (existingIndex >= 0) {
+    registry[existingIndex] = patientData;   // UPDATE
+    alert("Patient updated successfully ✅");
+  } else {
+    registry.push(patientData);              // NEW SAVE
+    alert("Patient saved successfully ✅");
+  }
+
+  localStorage.setItem(KEY_REGISTRY, JSON.stringify(registry));
+
+  apiFetch('/api/patients', { method: 'POST', body: patientData }).then(() => {
+    console.log('Synced to server ✅');
+  }).catch(err => {
+    alert('⚠️ Server sync FAILED (saved locally only): ' + err.message);
+  });
+});
+
+
+function saveItems(){ localStorage.setItem(KEY_ITEMS,JSON.stringify(items)); }
+function saveMeds(){ localStorage.setItem(KEY_MED,JSON.stringify(meds)); }
+function saveForm(){ localStorage.setItem(KEY_FORM,JSON.stringify(form)); }
+function saveAll(){ form.name=nameEl.value; form.age=ageEl.value; form.sex=sexEl.value; form.pmh=pmhEl.value; form.cc = ccEl.value; form.date=dateEl.value; form.billno=billEl.value; form.uhid=uhidEl.value; saveForm();
+saveItems();
+saveMeds();
+saveVisits(); }
+
+window.addEventListener('beforeunload', saveAll);
+[nameEl,ageEl,sexEl,pmhEl,dateEl].forEach(el=>el.addEventListener('input', ()=>{ saveAll(); if(el===dateEl) updateUHID(); }));
+
+/* ------------- utilities & printable builder ------------- */
+function loadJSON(k){ try{return JSON.parse(localStorage.getItem(k));}catch(e){return null} }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function buildRxHtml() {
+  const base = {
+  clinicName: document.querySelector('.clinic h1').innerText,
+  clinicAddr: document.querySelector('.clinic p').innerHTML,
+  uhid: uhidEl.value,
+  date: dateEl.value,
+  name: nameEl.value,
+  age: ageEl.value,
+  sex: sexEl.value,
+  pmh: pmhEl.value,
+  cc: ccEl.value,
+  meds: meds,
+  procedures: items,
+  visits: visits
+};
+
+  /* ---------------- Medicines Rows ---------------- */
+  const medRows = base.meds.map((m, i) => `
+<tr>
+  <td style="padding:6px;border:1px solid #ddd;text-align:center">${i + 1}</td>
+  <td style="padding:6px;border:1px solid #ddd">${esc(m.name)}</td>
+  <td style="padding:6px;border:1px solid #ddd;text-align:center">${esc(m.dose)}</td>
+  <td style="padding:6px;border:1px solid #ddd;text-align:center">${esc(m.freq)}</td>
+  <td style="padding:6px;border:1px solid #ddd;text-align:center">${esc(m.duration)}</td>
+</tr>`).join('');
+
+ /* ---------------- Procedure Rows WITH BOXES + VALUES ---------------- */
+const procRows = base.procedures.map((p, i) => `
+<tr>
+  <td style="padding:6px;border:1px solid #ddd;text-align:center">${esc(p.code)}</td>
+
+  <td style="padding:6px;border:1px solid #ddd">${esc(p.procedure)}</td>
+
+  <td style="padding:6px;border:1px solid #ddd;text-align:center">
+    <table style="margin:auto;border-collapse:collapse">
+      <tr>
+        <td style="border:1px solid #000;width:20px;height:10px;text-align:center;font-size:10px">
+          ${esc(p.boxes?.[0] || "")}
+        </td>
+        <td style="border:1px solid #000;width:20px;height:10px;text-align:center;font-size:10px">
+          ${esc(p.boxes?.[1] || "")}
+        </td>
+      </tr>
+      <tr>
+        <td style="border:1px solid #000;width:20px;height:10px;text-align:center;font-size:10px">
+          ${esc(p.boxes?.[2] || "")}
+        </td>
+        <td style="border:1px solid #000;width:20px;height:10px;text-align:center;font-size:10px">
+          ${esc(p.boxes?.[3] || "")}
+        </td>
+      </tr>
+    </table>
+  </td>
+
+  <td style="padding:6px;border:1px solid #ddd;text-align:center">${esc(p.no)}</td>
+</tr>
+`).join('');
+
+/* ---------------- Visit History ---------------- */
+
+const visitRows = base.visits.map(v=>{
+
+const proc =
+MASTER.find(p=>p.code===v.code);
+
+return `
+
+<tr>
+
+<td style="padding:6px;border:1px solid #ddd">
+${esc(v.date)}
+</td>
+
+<td style="padding:6px;border:1px solid #ddd">
+${esc(proc ? proc.procedure : "")}
+</td>
+
+<td style="padding:6px;border:1px solid #ddd;text-align:center">
+
+<table style="margin:auto;border-collapse:collapse">
+
+<tr>
+
+<td style="border:1px solid #000;width:20px;height:10px;font-size:10px;text-align:center">
+${esc(v.boxes[0])}
+</td>
+
+<td style="border:1px solid #000;width:20px;height:10px;font-size:10px;text-align:center">
+${esc(v.boxes[1])}
+</td>
+
+</tr>
+
+<tr>
+
+<td style="border:1px solid #000;width:20px;height:10px;font-size:10px;text-align:center">
+${esc(v.boxes[2])}
+</td>
+
+<td style="border:1px solid #000;width:20px;height:10px;font-size:10px;text-align:center">
+${esc(v.boxes[3])}
+</td>
+
+</tr>
+
+</table>
+
+</td>
+
+<td style="padding:6px;border:1px solid #ddd">
+${esc(v.notes)}
+</td>
+
+<td style="padding:6px;border:1px solid #ddd">
+${esc(v.next)}
+</td>
+
+</tr>
+
+`;
+
+}).join("");
+
+  /* ---------------- Final Rx HTML ---------------- */
+  return `
+<html>
+<head>
+<title>Rx - ${esc(base.name)}</title>
+<style>
+  body { font-family: Arial, Helvetica, sans-serif; padding: 18px; color: #111; }
+  h2 { margin: 0 0 6px 0; }
+  .meta { margin-top: 6px; color: #555; }
+  .rx-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+  .rx-table th { background: #fafafa; padding: 8px; border: 1px solid #ddd; }
+  .rx-table td { padding: 8px; border: 1px solid #ddd; }
+  .footer { margin-top: 30px; color: #666; font-size: 13px; }
+</style>
+</head>
+
+<body>
+
+<h2>${esc(base.clinicName)}</h2>
+<div class="meta">${base.clinicAddr}</div>
+<hr>
+
+<div><strong>UHID:</strong> ${esc(base.uhid)} &nbsp;&nbsp;
+     <strong>Date:</strong> ${esc(base.date)}</div>
+
+<div><strong>Patient:</strong> ${esc(base.name)}
+     &nbsp; <strong>Age:</strong> ${esc(base.age)}
+     &nbsp; <strong>Sex:</strong> ${esc(base.sex)}</div>
+
+<div style="margin-top:8px">
+  <strong>PMH:</strong> ${esc(base.pmh || '---')}
+</div>
+<div style="margin-top:8px">
+  <strong>Chief Complaint/TEST:</strong> ${esc(base.cc || '---')}
+</div>
+<h3 style="margin-top:12px">Medicines</h3>
+<table class="rx-table">
+  <thead>
+    <tr>
+      <th style="width:6%">#</th>
+      <th>Medicine</th>
+      <th style="width:18%">Dose</th>
+      <th style="width:14%">Frequency</th>
+      <th style="width:14%">Duration</th>
+    </tr>
+  </thead>
+  <tbody>
+    ${medRows || `<tr><td colspan="5" style="padding:8px;text-align:center;color:#666">No medicines prescribed.</td></tr>`}
+  </tbody>
+</table>
+
+<h3 style="margin-top:12px">Procedures</h3>
+<table class="rx-table">
+  <thead>
+    <tr>
+      <th style="width:20%">Code</th>
+      <th>Procedure</th>
+      <th style="width:20%">Boxes</th>
+      <th style="width:14%">Qty</th>
+    </tr>
+  </thead>
+  <tbody>
+    ${procRows || `<tr><td colspan="4" style="padding:8px;text-align:center;color:#666">No procedures added.</td></tr>`}
+  </tbody>
+</table>
+
+<h3 style="margin-top:18px">Visit History</h3>
+
+<table class="rx-table">
+
+<thead>
+
+<tr>
+
+<th style="width:16%">Date</th>
+
+<th style="width:28%">Procedure</th>
+
+<th style="width:18%">Tooth</th>
+
+<th>Clinical Notes</th>
+
+<th style="width:16%">Next Visit</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+${visitRows ||
+
+`<tr>
+
+<td colspan="5"
+
+style="text-align:center;color:#666">
+
+No Visit History
+
+</td>
+
+</tr>`}
+
+</tbody>
+
+</table>
+
+<div class="footer">
+  Signature: ____________________ &nbsp;&nbsp; SIGN & STAMP
+</div>
+
+</body>
+</html>`;
+}
+
+const viewSaved = document.getElementById('viewSaved');
+const savedModal = document.getElementById('savedModal');
+const savedBody = document.getElementById('savedBody');
+
+const savedSearch = document.getElementById('savedSearch');
+
+savedSearch.addEventListener('input', () => {
+  renderSavedList(savedSearch.value);
+});
+
+viewSaved.addEventListener('click', async () => {
+  savedSearch.value = '';
+  try {
+    const serverPatients = await apiFetch('/api/patients');
+    serverPatients.forEach(sp => {
+      const idx = registry.findIndex(p => p.id === sp.id);
+      if (idx >= 0) registry[idx] = sp; else registry.push(sp);
+    });
+    localStorage.setItem(KEY_REGISTRY, JSON.stringify(registry));
+  } catch (err) {
+    console.warn('Could not fetch server patient list, showing local data:', err.message);
+  }
+  renderSavedList();
+  savedModal.style.display = 'flex';
+});
+
+function patientTimestamp(p){
+  const t = p.created_at || p.createdAt || p.updated_at || p.savedAt;
+  const ms = t ? Date.parse(t) : 0;
+  return isNaN(ms) ? 0 : ms;
+}
+function formatCreatedAt(p){
+  const t = p.created_at || p.createdAt;
+  if (!t) return '';
+  const d = new Date(t);
+  if (isNaN(d.getTime())) return '';
+  return d.toLocaleString('en-IN', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+
+function renderSavedList(search = "") {
+
+  savedBody.innerHTML = '';
+const filtered = [...registry]
+.sort((a,b) => patientTimestamp(b) - patientTimestamp(a))  // real descending order, most recently CREATED first
+.filter(p => {
+  const q = search.toLowerCase();
+  return (
+    (p.form.name || "").toLowerCase().includes(q) ||
+    (p.id || "").toLowerCase().includes(q)
+  );
+});
+  if (filtered.length === 0) {
+    savedBody.innerHTML = '<tr><td colspan="5" style="text-align:center">No saved patients</td></tr>';
+    return;
+  }
+
+  filtered.forEach((p) => {
+
+    const tr = document.createElement('tr');
+
+    tr.innerHTML = `
+      <td>${p.id}</td>
+      <td>${p.form.name}</td>
+      <td>${formatCreatedAt(p) || p.form.date || ''}</td>
+      <td><button data-id="${p.id}" class="btn addBtn">Load</button></td>
+      <td><button data-del="${p.id}" class="danger-btn">Delete</button></td>
+    `;
+
+    savedBody.appendChild(tr);
+  });
+
+  // LOAD (SEARCH SAFE FIX)
+savedBody.querySelectorAll('[data-id]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const id = btn.getAttribute('data-id');
+    const patient = registry.find(p => p.id === id);
+    loadPatient(patient);
+    savedModal.style.display = 'none';
+  });
+});
+
+  // DELETE
+  savedBody.querySelectorAll('[data-del]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const id = btn.getAttribute('data-del');
+
+    if(confirm("Delete this patient?")){
+      const index = registry.findIndex(p => p.id === id);
+      registry.splice(index,1);
+      localStorage.setItem(KEY_REGISTRY, JSON.stringify(registry));
+      renderSavedList(savedSearch.value);
+      apiFetch('/api/patients/' + encodeURIComponent(id), { method: 'DELETE' }).catch(err => {
+        console.warn('Server delete failed:', err.message);
+      });
+    }
+  });
+});
+    }  
+
+function loadPatient(data){
+
+  form = {...data.form};
+items = [...data.items];
+meds = [...data.meds];
+visits = data.visits ? [...data.visits] : [];
+
+  nameEl.value = form.name;
+  ageEl.value = form.age;
+  sexEl.value = form.sex;
+  pmhEl.value = form.pmh;
+  dateEl.value = form.date;
+  billEl.value = form.billno || '';
+  uhidEl.value = data.id;
+
+  renderItems();
+renderMeds();
+renderVisits();
+refreshLinkedBill();
+}
+  /* ---------------- JSON EXPORT ---------------- */
+const exportJSONBtn = document.getElementById('exportJSON');
+const importJSONBtn = document.getElementById('importJSON');
+const jsonFileInput = document.getElementById('jsonFile');
+
+exportJSONBtn.addEventListener('click', () => {
+
+  if (registry.length === 0) {
+    alert("Koi data nahi hai export karne ke liye");
+    return;
+  }
+
+  const dataStr = JSON.stringify(registry, null, 2);
+  const blob = new Blob([dataStr], { type: "application/json" });
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+
+  const fileName = `JKH_Backup_${new Date().toISOString().slice(0,10)}.json`;
+
+  a.href = url;
+  a.download = fileName;
+  a.click();
+
+  URL.revokeObjectURL(url);
+});
+
+
+/* ---------------- JSON IMPORT ---------------- */
+importJSONBtn.addEventListener('click', () => {
+  jsonFileInput.click();
+});
+
+jsonFileInput.addEventListener('change', function () {
+
+  const file = this.files[0];
+  if (!file) return;
+if(!confirm("Existing data merge hoga. Continue?")) {
+  jsonFileInput.value = "";
+  return;
+}
+
+  const reader = new FileReader();
+
+  reader.onload = function (e) {
+    try {
+      const importedData = JSON.parse(e.target.result);
+
+      if (!Array.isArray(importedData)) {
+        alert("Invalid JSON format ❌");
+        return;
+      }
+
+      let added = 0;
+      let updated = 0;
+
+      importedData.forEach(newPatient => {
+
+        const index = registry.findIndex(p => p.id === newPatient.id);
+
+        if (index >= 0) {
+          registry[index] = newPatient;   // UPDATE
+          updated++;
+        } else {
+          registry.push(newPatient);     // ADD NEW
+          added++;
+        }
+
+      });
+
+      localStorage.setItem(KEY_REGISTRY, JSON.stringify(registry));
+
+      alert(`Backup Merge Done ✅\nNew: ${added}\nUpdated: ${updated}`);
+
+      apiFetch('/api/patients/bulk', { method: 'POST', body: importedData }).catch(err => {
+        console.warn('Server bulk sync failed (saved locally anyway):', err.message);
+      });
+
+    } catch (err) {
+      alert("JSON file galat hai ❌");
+    }
+  };
+
+  reader.readAsText(file);
+  jsonFileInput.value = "";
+});
+</script>
+</body>
+</html>

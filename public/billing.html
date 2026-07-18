@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>JK Dental Billing</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F5F7F6;
+  --surface:#FFFFFF;
+  --ink:#16302C;
+  --ink-soft:#51625E;
+  --ink-faint:#8A9A96;
+  --teal:#1F7A6C;
+  --teal-dark:#145A50;
+  --teal-wash:#E7F1EE;
+  --gold:#C98A2C;
+  --gold-wash:#FBF3E4;
+  --line:#DCE3E0;
+  --danger:#B3432B;
+  --danger-wash:#FBEBE6;
+  --radius:10px;
+  --shadow:0 1px 2px rgba(22,48,44,.06), 0 4px 16px rgba(22,48,44,.06);
+}
+*{box-sizing:border-box;}
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  background:var(--paper);
+  color:var(--ink);
+  margin:0;
+  padding:0 0 60px;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1000px;margin:0 auto;padding:0 20px;}
+
+/* ===== TOPBAR ===== */
+.topbar{
+  position:sticky;top:0;z-index:40;
+  background:var(--surface);
+  border-bottom:1px solid var(--line);
+  box-shadow:var(--shadow);
+}
+.topbar-inner{
+  max-width:1000px;margin:0 auto;padding:10px 20px;
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+}
+.brandmark{
+  font-family:'Fraunces',serif;font-weight:600;font-size:19px;color:var(--teal-dark);
+  white-space:nowrap;
+}
+.savestatus{
+  display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink-soft);
+  padding:4px 10px;border-radius:999px;background:var(--paper);white-space:nowrap;
+}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--ink-faint);flex:none;}
+.dot.saved{background:var(--teal);}
+.dot.saving{background:var(--gold);animation:pulse 1s infinite ease-in-out;}
+.dot.error{background:var(--danger);}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto;}
+button{
+  font-family:inherit;font-size:13.5px;font-weight:600;
+  border:1px solid var(--line);background:var(--surface);color:var(--ink);
+  padding:8px 13px;border-radius:8px;cursor:pointer;
+  display:inline-flex;align-items:center;gap:6px;
+  transition:background .15s,border-color .15s,transform .05s;
+}
+button:hover{border-color:var(--teal);color:var(--teal-dark);}
+button:active{transform:translateY(1px);}
+button:focus-visible, input:focus-visible, select:focus-visible{
+  outline:2px solid var(--teal);outline-offset:1px;
+}
+button.primary{background:var(--teal);border-color:var(--teal);color:#fff;}
+button.primary:hover{background:var(--teal-dark);border-color:var(--teal-dark);color:#fff;}
+button.ghost{background:transparent;border-color:transparent;color:var(--ink-soft);padding:8px 8px;}
+button.danger{color:var(--danger);border-color:var(--danger-wash);}
+button.danger:hover{background:var(--danger-wash);border-color:var(--danger);}
+button:disabled{opacity:.5;cursor:not-allowed;}
+
+/* ===== BANNER ===== */
+.banner{
+  max-width:1000px;margin:14px auto 0;padding:10px 16px;border-radius:8px;
+  background:var(--gold-wash);border:1px solid #ecd8ac;color:#7A5310;
+  font-size:13.5px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+}
+.banner button{background:var(--gold);border-color:var(--gold);color:#fff;padding:6px 11px;font-size:12.5px;}
+.banner .x{margin-left:auto;background:transparent;border:none;color:#7A5310;font-size:16px;padding:0 4px;}
+
+/* ===== LETTERHEAD ===== */
+.sheet{
+  background:var(--surface);margin-top:20px;border-radius:var(--radius);
+  box-shadow:var(--shadow);border:1px solid var(--line);overflow:hidden;
+}
+.letterhead{
+  display:flex;position:relative;padding:22px 24px 20px 28px;
+  border-bottom:1px solid var(--line);gap:16px;flex-wrap:wrap;
+}
+.letterhead::before{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:6px;
+  background:repeating-linear-gradient(180deg,var(--teal) 0 10px,var(--teal-wash) 10px 14px);
+}
+.clinic h1{
+  font-family:'Fraunces',serif;font-weight:600;font-size:23px;margin:0 0 4px;color:var(--ink);
+}
+.clinic p{margin:0;font-size:12.5px;color:var(--ink-soft);line-height:1.6;}
+.billmeta{margin-left:auto;text-align:right;font-size:12.5px;color:var(--ink-soft);min-width:190px;}
+.billmeta .no{
+  font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:16px;color:var(--teal-dark);
+}
+.billmeta label{display:block;margin-top:6px;}
+.billmeta input{
+  border:1px solid var(--line);border-radius:6px;padding:5px 8px;font-size:13px;
+  font-family:'IBM Plex Mono',monospace;width:140px;
+}
+
+/* ===== PATIENT CARD ===== */
+.patient{
+  padding:18px 24px;display:grid;grid-template-columns:2fr 1fr 1fr 1.2fr;gap:12px;
+  border-bottom:1px solid var(--line);
+}
+.field label{display:block;font-size:11.5px;font-weight:600;color:var(--ink-faint);
+  text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;}
+.field input, .field select{
+  width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 10px;
+  font-size:14.5px;font-family:inherit;color:var(--ink);background:var(--surface);
+}
+.field input:focus, .field select:focus{border-color:var(--teal);}
+
+/* ===== TABLE ===== */
+.tablewrap{padding:18px 24px 0;overflow-x:auto;}
+table{width:100%;border-collapse:collapse;min-width:640px;}
+thead th{
+  text-align:left;font-size:11px;font-weight:700;color:var(--ink-faint);
+  text-transform:uppercase;letter-spacing:.04em;padding:0 8px 8px;border-bottom:2px solid var(--line);
+}
+tbody td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:middle;}
+tbody tr:hover{background:var(--paper);}
+.rownum{color:var(--ink-faint);font-size:13px;width:26px;}
+.proc-input{width:100%;min-width:260px;border:1px solid var(--line);border-radius:7px;padding:7px 9px;font-size:13.5px;}
+.rate-input{width:90px;border:1px solid var(--line);border-radius:7px;padding:7px 9px;font-family:'IBM Plex Mono',monospace;text-align:right;}
+.qty-input{width:56px;border:1px solid var(--line);border-radius:7px;padding:7px 9px;font-family:'IBM Plex Mono',monospace;text-align:center;}
+.total-cell{font-family:'IBM Plex Mono',monospace;font-weight:600;text-align:right;padding-right:10px;white-space:nowrap;}
+.rowdel{background:transparent;border:none;color:var(--ink-faint);font-size:16px;padding:4px 6px;}
+.rowdel:hover{color:var(--danger);border:none;}
+.addrow-cell{padding:10px 8px 16px;}
+.addrow{border-style:dashed;color:var(--ink-soft);}
+
+/* ===== TOTAL BAR ===== */
+.totalbar{
+  display:flex;justify-content:flex-end;align-items:baseline;gap:10px;
+  padding:16px 24px 22px;
+}
+.totalbar .label{font-size:13px;color:var(--ink-soft);font-weight:600;}
+.totalbar .amt{
+  font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:600;color:var(--gold);
+  background:var(--gold-wash);padding:6px 16px;border-radius:8px;
+}
+
+/* ===== ACTIONS ===== */
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px;align-items:center;}
+.actions .spacer{flex:1;}
+.filehidden{display:none;}
+.lastbackup{font-size:12px;color:var(--ink-faint);}
+
+/* ===== MODAL ===== */
+.overlay{
+  position:fixed;inset:0;background:rgba(22,48,44,.42);display:none;
+  align-items:flex-start;justify-content:center;padding:6vh 16px;z-index:100;
+}
+.overlay.open{display:flex;}
+.modal{
+  background:var(--surface);border-radius:12px;max-width:720px;width:100%;
+  box-shadow:0 20px 60px rgba(0,0,0,.25);max-height:86vh;display:flex;flex-direction:column;overflow:hidden;
+}
+.modal-head{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;}
+.modal-head h3{margin:0;font-family:'Fraunces',serif;font-size:18px;font-weight:600;}
+.modal-head input{flex:1;border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:14px;}
+.modal-body{overflow:auto;padding:0;}
+.regrow{display:flex;align-items:center;gap:10px;padding:11px 20px;border-bottom:1px solid var(--line);}
+.regrow:hover{background:var(--paper);}
+.regrow .rno{font-family:'IBM Plex Mono',monospace;font-weight:600;color:var(--teal-dark);font-size:13px;width:90px;flex:none;}
+.regrow .rname{flex:1;font-size:14px;}
+.regrow .rname small{display:block;color:var(--ink-faint);font-size:11.5px;}
+.regrow .ramt{font-family:'IBM Plex Mono',monospace;font-size:13.5px;color:var(--ink-soft);width:90px;text-align:right;}
+.empty{padding:40px 20px;text-align:center;color:var(--ink-faint);font-size:14px;}
+
+/* ===== TOAST ===== */
+.toast{
+  position:fixed;bottom:20px;right:20px;background:var(--ink);color:#fff;
+  padding:11px 16px;border-radius:8px;font-size:13.5px;box-shadow:0 8px 24px rgba(0,0,0,.25);
+  display:flex;align-items:center;gap:8px;z-index:200;opacity:0;transform:translateY(8px);
+  transition:opacity .2s,transform .2s;pointer-events:none;
+}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.err{background:var(--danger);}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:720px){
+  .patient{grid-template-columns:1fr 1fr;}
+  .letterhead{padding:18px 18px 16px 22px;}
+  .billmeta{margin-left:0;text-align:left;}
+  .tablewrap{padding:14px 14px 0;}
+  .totalbar{padding:14px 14px 18px;}
+}
+
+/* ===== PRINT ===== */
+@media print{
+  body{background:#fff;padding:0;}
+  .topbar,.banner,.actions,.overlay,.toast,.no-print{display:none !important;}
+  .sheet{box-shadow:none;border:none;margin:0;}
+  .wrap{max-width:100%;padding:0;}
+  th,td{font-size:14px;}
+  .totalbar .amt{background:none;color:#000;font-size:20px;}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <span class="brandmark">JK Dental — Billing</span>
+    <span class="savestatus" id="saveStatus"><span class="dot" id="saveDot"></span><span id="saveText">Loading…</span></span>
+    <div class="toolbar">
+      <a href="/index.html" id="opdFormLink" class="ghost" style="text-decoration:none;border:1px solid var(--line);border-radius:8px;padding:8px 13px;font-size:13.5px;font-weight:600;color:var(--ink-soft);display:inline-flex;align-items:center;">← OPD Form</a>
+      <button onclick="newBill()">＋ New bill</button>
+      <button class="primary" onclick="saveBill(true)">Save</button>
+      <button class="primary" onclick="savePDFCurrent()">⤓ Save PDF</button>
+      <button onclick="window.print()">Print</button>
+      <button onclick="openRegister()">Register</button>
+      <button onclick="openProcAdmin()">⚙ Procedures</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="banner no-print" id="backupBanner" style="display:none">
+    <span id="backupMsg"></span>
+    <button onclick="exportJSON()">Back up now</button>
+    <button class="x" onclick="dismissBanner()" aria-label="Dismiss">×</button>
+  </div>
+
+  <div class="sheet">
+    <div class="letterhead">
+      <div class="clinic">
+        <h1>J. K. Hospital Dental Care Center</h1>
+        <p>38/53 D Bai Ka Bagh, Prayagraj<br>
+        jkhospitalalld@gmail.com &nbsp;·&nbsp; 9450595694<br>
+        CMO Reg: 3351/3881 &nbsp;·&nbsp; NABH: 188/2023/1613 &nbsp;·&nbsp; AERB: 23-LOEE-885681</p>
+      </div>
+      <div class="billmeta">
+        <div class="no" id="billNoDisplay">—</div>
+        <label>Date
+          <input type="date" id="billDate" onchange="scheduleSave()">
+        </label>
+      </div>
+    </div>
+
+    <div class="patient">
+      <div class="field"><label>Patient name</label><input id="pName" oninput="scheduleSave()"></div>
+      <div class="field"><label>Age</label><input id="pAge" oninput="scheduleSave()"></div>
+      <div class="field"><label>Sex</label>
+        <select id="pSex" onchange="scheduleSave()"><option>M</option><option>F</option><option>O</option></select>
+      </div>
+      <div class="field"><label>Phone</label><input id="pPhone" oninput="scheduleSave()"></div>
+    </div>
+
+    <div class="tablewrap">
+      <table>
+        <thead><tr>
+          <th></th><th>Procedure</th><th>Rate (₹)</th><th>Qty</th><th style="text-align:right">Total (₹)</th><th class="no-print"></th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div class="addrow-cell">
+        <button class="addrow" onclick="addRow()">＋ Add procedure</button>
+      </div>
+    </div>
+
+    <div class="totalbar">
+      <span class="label">Grand total</span>
+      <span class="amt">₹<span id="grand">0.00</span></span>
+    </div>
+
+    <div class="totalbar" style="margin-top:6px">
+      <span class="label">Total paid</span>
+      <span class="amt" id="paidAmt">₹0.00</span>
+    </div>
+    <div class="totalbar" style="margin-top:6px">
+      <span class="label">Balance due</span>
+      <span class="amt" id="balanceAmt">₹0.00</span>
+    </div>
+    <div style="margin:6px 0 14px">
+      <span id="paymentStatusBadge" style="display:inline-block;padding:4px 12px;border-radius:999px;font-size:13px;font-weight:700"></span>
+    </div>
+
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Date</th><th>Amount (₹)</th><th>Note</th><th class="no-print"></th></tr></thead>
+        <tbody id="paymentsBody"></tbody>
+      </table>
+      <div class="addrow-cell no-print" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 0">
+        <input type="date" id="payDate" style="padding:8px;border-radius:8px;border:1px solid var(--line)">
+        <input type="number" id="payAmount" placeholder="Amount" inputmode="decimal" style="width:120px;padding:8px;border-radius:8px;border:1px solid var(--line)">
+        <input type="text" id="payNote" placeholder="Note (e.g. cash / UPI)" style="width:180px;padding:8px;border-radius:8px;border:1px solid var(--line)">
+        <button class="addrow" onclick="addPayment()">＋ Add payment</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions no-print">
+    <button onclick="exportJSON()">⤓ Backup JSON</button>
+    <button onclick="document.getElementById('importFile').click()">⤒ Restore JSON</button>
+    <input class="filehidden" type="file" id="importFile" accept=".json" onchange="importJSON(this.files[0])">
+    <button onclick="exportExcel()">⤓ Export CSV</button>
+    <span class="spacer"></span>
+    <span class="lastbackup" id="lastBackupText"></span>
+  </div>
+</div>
+
+<!-- Register modal -->
+<div class="overlay" id="regOverlay" onclick="if(event.target===this)closeRegister()">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Register</h3>
+      <input id="regSearch" placeholder="Search by name, phone or bill no…" oninput="renderRegister()">
+      <button class="ghost" id="trashToggle" onclick="toggleTrashView()">Trash</button>
+      <button class="ghost" onclick="closeRegister()">Close</button>
+    </div>
+    <div class="modal-body" id="regBody"></div>
+  </div>
+</div>
+
+<!-- Manage Procedures modal -->
+<div class="overlay" id="procAdminOverlay" onclick="if(event.target===this)closeProcAdmin()">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Manage Procedures</h3>
+      <input id="procAdminSearch" placeholder="Search code or name…" oninput="renderProcAdmin()">
+      <button class="ghost" onclick="closeProcAdmin()">Close</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 14px;border-bottom:1px solid var(--line)">
+        <input id="pa_code" placeholder="Code (e.g. JK019)" style="width:130px;padding:8px;border-radius:8px;border:1px solid var(--line)">
+        <input id="pa_name" placeholder="Procedure name" style="flex:1;min-width:200px;padding:8px;border-radius:8px;border:1px solid var(--line)">
+        <input id="pa_rate" type="number" placeholder="Rate (₹)" style="width:110px;padding:8px;border-radius:8px;border:1px solid var(--line)">
+        <button class="primary" onclick="saveProcAdmin()">＋ Add / Update</button>
+        <button class="ghost" onclick="clearProcAdminForm()">Clear</button>
+      </div>
+      <div id="procAdminBody" style="padding:0 14px"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------------------------------------------------------
+   PROCEDURE PRICE LIST
+--------------------------------------------------------- */
+let procedures=[];  // loaded from /api/procedures at runtime (shared with OPD form)
+
+/* ---------------------------------------------------------
+   STORAGE LAYER
+   - localStorage, but every write rotates 3 generations of
+     backup copies, so a corrupted / interrupted write can
+     never wipe data outright.
+   - deleting a bill never destroys it — it moves to a trash
+     list that can be restored any time from the Register.
+   - all reads validate JSON before trusting it.
+--------------------------------------------------------- */
+const K_BILLS='jkd_bills', K_COUNTER='jkd_billCounter',
+      K_LASTBACKUP='jkd_lastBackup', K_UNBACKED='jkd_unbackedCount',
+      K_TRASH='jkd_trash';
+const K_GEN=['jkd_bills_gen1','jkd_bills_gen2','jkd_bills_gen3']; // rotating history, newest first
+let storageOK=true;
+
+/* ---------------------------------------------------------
+   SERVER SYNC — same-origin API served by this Worker.
+   Local storage stays the source of truth for instant saves;
+   these calls sync to the shared D1 database in the background
+   so bills are visible across devices too.
+--------------------------------------------------------- */
+const API_BASE='';
+async function apiFetch(path, opts={}){
+  const res = await fetch(API_BASE + path, {
+    ...opts,
+    headers: { 'Content-Type':'application/json', ...(opts.headers||{}) },
+    body: opts.body ? JSON.stringify(opts.body) : undefined
+  });
+  const data = await res.json().catch(()=>({}));
+  if(!res.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
+
+
+function storageSelfTest(){
+  try{ localStorage.setItem('jkd_test','1'); localStorage.removeItem('jkd_test'); return true; }
+  catch(e){ return false; }
+}
+function safeParse(raw){ try{ return JSON.parse(raw); }catch(e){ return undefined; } }
+
+function readBills(){
+  const raw=localStorage.getItem(K_BILLS);
+  const parsed = raw!==null ? safeParse(raw) : [];
+  if(Array.isArray(parsed)) return parsed;
+  // main copy missing or corrupted — walk the generations, newest first
+  for(const key of K_GEN){
+    const g=safeParse(localStorage.getItem(key));
+    if(Array.isArray(g)){
+      toast('Main save was unreadable — recovered from an automatic backup copy.',true);
+      return g;
+    }
+  }
+  toast('Could not read saved bills from this browser. Restore from a JSON backup if you have one.',true);
+  return [];
+}
+function writeBills(bills){
+  try{
+    const json=JSON.stringify(bills);
+    if(safeParse(json)===undefined) throw new Error('validation failed');
+    const current=localStorage.getItem(K_BILLS);
+    if(current!==null && safeParse(current)!==undefined){
+      // rotate: gen1 -> gen2 -> gen3, then current -> gen1
+      localStorage.setItem(K_GEN[2], localStorage.getItem(K_GEN[1])||'[]');
+      localStorage.setItem(K_GEN[1], localStorage.getItem(K_GEN[0])||'[]');
+      localStorage.setItem(K_GEN[0], current);
+    }
+    localStorage.setItem(K_BILLS,json);
+    return true;
+  }catch(e){
+    return false;
+  }
+}
+function readTrash(){
+  const t=safeParse(localStorage.getItem(K_TRASH));
+  return Array.isArray(t)? t : [];
+}
+function writeTrash(list){
+  try{ localStorage.setItem(K_TRASH, JSON.stringify(list)); return true; }
+  catch(e){ return false; }
+}
+function getCounter(){ return parseInt(localStorage.getItem(K_COUNTER)||'0'); }
+function setCounter(n){ try{ localStorage.setItem(K_COUNTER,String(n)); }catch(e){} }
+
+/* ---------------------------------------------------------
+   APP STATE
+--------------------------------------------------------- */
+let rows=[];         // {id, code, rate, qty}
+let rowSeq=0;
+let payments=[];     // {date, amount, note}
+let currentBillNo='';
+let saveTimer=null;
+let dirty=false;
+
+function $(id){return document.getElementById(id);}
+
+/* ---------- datalist options ---------- */
+function procOptionValue(p){return `${p.code} — ${p.name}`;}
+function buildDatalist(){
+  const existing=document.getElementById('procList');
+  if(existing) existing.remove();
+  let dl=document.createElement('datalist');
+  dl.id='procList';
+  dl.innerHTML=procedures.map(p=>`<option value="${procOptionValue(p).replace(/"/g,'&quot;')}">`).join('');
+  document.body.appendChild(dl);
+}
+function findProcByOptionValue(v){
+  return procedures.find(p=>procOptionValue(p)===v) ||
+         procedures.find(p=>v.trim().toUpperCase().startsWith(p.code.toUpperCase()));
+}
+
+/* ---------- rows / table rendering ---------- */
+function addRow(prefill){
+  rowSeq++;
+  rows.push({id:rowSeq, code:prefill?.code||'', label:prefill?.label||'', rate:prefill?.rate??'', qty:prefill?.qty??1});
+  renderRows();
+  scheduleSave();
+}
+function removeRow(id){
+  if(rows.length<=1){ toast('A bill needs at least one line.',true); return; }
+  rows=rows.filter(r=>r.id!==id);
+  renderRows();
+  scheduleSave();
+}
+function renderRows(){
+  const tbody=$('tbody');
+  tbody.innerHTML=rows.map((r,i)=>`
+    <tr>
+      <td class="rownum">${i+1}</td>
+      <td><input class="proc-input" list="procList" value="${(r.label||r.code||'').replace(/"/g,'&quot;')}"
+            placeholder="Search code or procedure…"
+            oninput="onProcInput(${r.id}, this.value)"></td>
+      <td><input class="rate-input" value="${r.rate}" inputmode="decimal"
+            oninput="onFieldChange(${r.id},'rate',this.value)"></td>
+      <td><input class="qty-input" value="${r.qty}" inputmode="numeric"
+            oninput="onFieldChange(${r.id},'qty',this.value)"></td>
+      <td class="total-cell">${rowTotal(r).toFixed(2)}</td>
+      <td><button class="rowdel no-print" title="Remove line" onclick="removeRow(${r.id})">✕</button></td>
+    </tr>`).join('');
+  calcAll();
+}
+function onProcInput(id,val){
+  const r=rows.find(x=>x.id===id); if(!r) return;
+  r.label=val;
+  const match=findProcByOptionValue(val);
+  if(match){ r.code=match.code; r.rate=match.rate; renderRows(); }
+  scheduleSave();
+}
+function onFieldChange(id,field,val){
+  const r=rows.find(x=>x.id===id); if(!r) return;
+  r[field]=val;
+  calcAll();
+  scheduleSave();
+}
+function rowTotal(r){ return (parseFloat(r.rate)||0)*(parseFloat(r.qty)||0); }
+function calcAll(){
+  let g=0;
+  rows.forEach((r,i)=>{
+    const cell=document.querySelectorAll('#tbody tr')[i]?.querySelector('.total-cell');
+    const t=rowTotal(r);
+    if(cell) cell.textContent=t.toFixed(2);
+    g+=t;
+  });
+  $('grand').textContent=g.toFixed(2);
+  renderPayments();
+}
+
+/* ---------- payments ---------- */
+function addPayment(){
+  const amt=parseFloat($('payAmount').value);
+  if(!amt || amt<=0){ toast('Enter a valid payment amount.',true); return; }
+  const date=$('payDate').value || new Date().toISOString().slice(0,10);
+  const note=$('payNote').value.trim();
+  payments.push({date, amount:amt, note});
+  $('payAmount').value=''; $('payNote').value=''; $('payDate').value='';
+  renderPayments();
+  scheduleSave();
+}
+function removePayment(idx){
+  payments.splice(idx,1);
+  renderPayments();
+  scheduleSave();
+}
+function renderPayments(){
+  const body=$('paymentsBody');
+  if(!body) return;
+  body.innerHTML = payments.length ? payments.map((p,i)=>`
+    <tr>
+      <td>${p.date||''}</td>
+      <td>₹${(parseFloat(p.amount)||0).toFixed(2)}</td>
+      <td>${p.note||''}</td>
+      <td class="no-print"><button class="rowdel" title="Remove payment" onclick="removePayment(${i})">✕</button></td>
+    </tr>`).join('') : `<tr><td colspan="4" style="text-align:center;color:var(--ink-soft);padding:10px">No payments recorded yet.</td></tr>`;
+
+  const grand=parseFloat(($('grand').textContent||'0').replace(/,/g,''))||0;
+  const paid=payments.reduce((s,p)=>s+(parseFloat(p.amount)||0),0);
+  const balance=Math.max(0, grand-paid);
+
+  $('paidAmt').textContent='₹'+paid.toFixed(2);
+  $('balanceAmt').textContent='₹'+balance.toFixed(2);
+
+  const badge=$('paymentStatusBadge');
+  if(grand<=0){
+    badge.textContent=''; badge.style.background='transparent';
+  }else if(balance<=0.004){
+    badge.textContent='✅ Paid / Completed'; badge.style.background='#dcfce7'; badge.style.color='#15803d';
+  }else if(paid>0){
+    badge.textContent=`⏳ Partially paid — Balance ₹${balance.toFixed(2)}`; badge.style.background='#fef3c7'; badge.style.color='#92400e';
+  }else{
+    badge.textContent=`❗ Unpaid — Balance ₹${balance.toFixed(2)}`; badge.style.background='#fee2e2'; badge.style.color='#b91c1c';
+  }
+}
+function paymentStatus(bill){
+  const grand=parseFloat(bill.total)||0;
+  const paid=(bill.payments||[]).reduce((s,p)=>s+(parseFloat(p.amount)||0),0);
+  const balance=Math.max(0, grand-paid);
+  if(grand<=0) return {label:'', paid, balance};
+  if(balance<=0.004) return {label:'Paid', paid, balance};
+  if(paid>0) return {label:'Partial', paid, balance};
+  return {label:'Unpaid', paid, balance};
+}
+
+/* ---------- bill lifecycle ---------- */
+function nextBillNo_local(){
+  const c=getCounter()+1;
+  setCounter(c);
+  const prefix=new Date().toISOString().slice(2,10).replace(/-/g,''); // YYMMDD
+  return prefix+String(c).padStart(4,'0');
+}
+async function nextBillNo(){
+  try{
+    const data = await apiFetch('/api/next-billno');
+    return data.no;
+  }catch(err){
+    console.warn('Could not reach server for bill number, using local counter (may clash with other devices):', err.message);
+    return nextBillNo_local();
+  }
+}
+async function newBill(){
+  currentBillNo=await nextBillNo();
+  $('billNoDisplay').textContent=currentBillNo;
+  $('billDate').valueAsDate=new Date();
+  $('pName').value=''; $('pAge').value=''; $('pSex').value='M'; $('pPhone').value='';
+  rows=[]; rowSeq=0;
+  payments=[];
+  linkedPatientUHID='';
+  addRow();
+  dirty=false;
+  setSaveStatus('saved');
+}
+function collectBill(){
+  return {
+    no:currentBillNo,
+    date:$('billDate').value,
+    name:$('pName').value,
+    age:$('pAge').value,
+    sex:$('pSex').value,
+    phone:$('pPhone').value,
+    patientUHID: linkedPatientUHID || '',
+    lines:rows.filter(r=>r.code||r.label).map(r=>({code:r.code,label:r.label,rate:r.rate,qty:r.qty,total:rowTotal(r).toFixed(2)})),
+    total:$('grand').textContent,
+    payments: payments.slice(),
+    updatedAt:new Date().toISOString()
+  };
+}
+function scheduleSave(){
+  dirty=true;
+  setSaveStatus('saving');
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(()=>saveBill(false), 700);
+}
+function saveBill(manual){
+  const bill=collectBill();
+  const isEmpty = !bill.name && !bill.phone && bill.lines.length===0;
+  if(isEmpty){
+    if(manual) toast('Nothing to save yet.',true);
+    setSaveStatus('saved');
+    return;
+  }
+  const bills=readBills();
+  const idx=bills.findIndex(b=>b.no===bill.no);
+  if(idx>=0) bills[idx]=bill; else bills.push(bill);
+  const ok=writeBills(bills);
+  if(ok){
+    dirty=false;
+    setSaveStatus('saved');
+    bumpUnbacked();
+    if(manual) toast(`Bill ${bill.no} saved.`);
+    apiFetch('/api/bills', { method:'POST', body: bill }).catch(err=>{
+      console.warn('Server sync failed (saved locally anyway):', err.message);
+    });
+  }else{
+    setSaveStatus('error');
+    toast('Save failed — your browser storage may be full or private-mode is blocking saves. Use Backup JSON to keep this bill safe.',true);
+  }
+}
+function setSaveStatus(state){
+  const dot=$('saveDot'), text=$('saveText');
+  dot.className='dot '+state;
+  text.textContent = state==='saving' ? 'Saving…' : state==='error' ? 'Save failed — tap Save to retry' : 'All changes saved';
+}
+
+/* ---------- register ---------- */
+let regShowTrash=false;
+async function openRegister(){
+  $('regSearch').value=''; regShowTrash=false; updateTrashToggle();
+  try{
+    const serverBills = await apiFetch('/api/bills');
+    const local = readBills();
+    const byNo = new Map(local.map(b=>[b.no,b]));
+    serverBills.forEach(sb=>byNo.set(sb.no, sb));
+    writeBills(Array.from(byNo.values()));
+  }catch(err){
+    console.warn('Could not fetch server bill list, showing local data:', err.message);
+  }
+  renderRegister();
+  $('regOverlay').classList.add('open');
+}
+function closeRegister(){ $('regOverlay').classList.remove('open'); }
+
+/* ---------- manage procedures (shared master list) ---------- */
+function openProcAdmin(){
+  $('procAdminSearch').value='';
+  clearProcAdminForm();
+  renderProcAdmin();
+  $('procAdminOverlay').classList.add('open');
+}
+function closeProcAdmin(){ $('procAdminOverlay').classList.remove('open'); }
+function clearProcAdminForm(){
+  $('pa_code').value=''; $('pa_name').value=''; $('pa_rate').value='';
+  $('pa_code').removeAttribute('data-editing');
+}
+function renderProcAdmin(){
+  const q=($('procAdminSearch').value||'').toLowerCase().trim();
+  const body=$('procAdminBody');
+  const list=[...procedures].sort((a,b)=>a.code.localeCompare(b.code)).filter(p=>
+    !q || p.code.toLowerCase().includes(q) || p.name.toLowerCase().includes(q)
+  );
+  if(!list.length){ body.innerHTML='<p style="padding:16px;color:var(--ink-soft);text-align:center">No procedures found.</p>'; return; }
+  body.innerHTML = `<table style="width:100%;border-collapse:collapse">
+    <thead><tr><th style="text-align:left;padding:8px">Code</th><th style="text-align:left;padding:8px">Name</th><th style="text-align:right;padding:8px">Rate (₹)</th><th></th></tr></thead>
+    <tbody>` + list.map(p=>`
+      <tr style="border-top:1px solid var(--line)">
+        <td style="padding:8px">${p.code}</td>
+        <td style="padding:8px">${p.name}</td>
+        <td style="padding:8px;text-align:right">${p.rate.toFixed(2)}</td>
+        <td style="padding:8px;white-space:nowrap">
+          <button class="ghost" onclick="editProcAdmin('${p.code}')">Edit</button>
+          <button class="danger" onclick="deleteProcAdmin('${p.code}')">Delete</button>
+        </td>
+      </tr>`).join('') + `</tbody></table>`;
+}
+function editProcAdmin(code){
+  const p=procedures.find(x=>x.code===code);
+  if(!p) return;
+  $('pa_code').value=p.code; $('pa_code').setAttribute('data-editing','1');
+  $('pa_name').value=p.name;
+  $('pa_rate').value=p.rate;
+}
+async function saveProcAdmin(){
+  const code=$('pa_code').value.trim();
+  const name=$('pa_name').value.trim();
+  const rate=parseFloat($('pa_rate').value);
+  if(!code || !name){ toast('Code and name are required.', true); return; }
+  if(isNaN(rate) || rate<0){ toast('Enter a valid rate.', true); return; }
+  try{
+    await apiFetch('/api/procedures', { method:'POST', body:{code, name, rate} });
+    procedures = await apiFetch('/api/procedures');
+    buildDatalist();
+    clearProcAdminForm();
+    renderProcAdmin();
+    toast(`Procedure ${code} saved.`);
+  }catch(err){
+    toast('⚠️ Could not save: ' + err.message, true);
+  }
+}
+async function deleteProcAdmin(code){
+  if(!confirm(`Delete procedure ${code}? This won't affect bills that already used it.`)) return;
+  try{
+    await apiFetch('/api/procedures/' + encodeURIComponent(code), { method:'DELETE' });
+    procedures = await apiFetch('/api/procedures');
+    buildDatalist();
+    renderProcAdmin();
+    toast(`Procedure ${code} deleted.`);
+  }catch(err){
+    toast('⚠️ Could not delete: ' + err.message, true);
+  }
+}
+function toggleTrashView(){ regShowTrash=!regShowTrash; updateTrashToggle(); renderRegister(); }
+function updateTrashToggle(){
+  const btn=$('trashToggle');
+  const count=readTrash().length;
+  btn.textContent = regShowTrash ? '← Back to bills' : `Trash (${count})`;
+  btn.style.color = regShowTrash ? 'var(--teal-dark)' : '';
+}
+function renderRegister(){
+  const q=$('regSearch').value.trim().toLowerCase();
+  const body=$('regBody');
+
+  if(regShowTrash){
+    const trash=readTrash().slice().sort((a,b)=>(b.deletedAt||'').localeCompare(a.deletedAt||''));
+    const filtered=trash.filter(b=>!q || b.no.toLowerCase().includes(q) || (b.name||'').toLowerCase().includes(q) || (b.phone||'').includes(q));
+    if(!filtered.length){ body.innerHTML=`<div class="empty">${trash.length? 'No trashed bills match your search.' : 'Trash is empty. Deleted bills show up here and can be restored any time.'}</div>`; return; }
+    body.innerHTML=filtered.map(b=>`
+      <div class="regrow">
+        <span class="rno">${b.no}</span>
+        <span class="rname">
+          ${b.name||'(no name)'}<small>Deleted ${b.deletedAt? new Date(b.deletedAt).toLocaleString():''}</small>
+        </span>
+        <span class="ramt">₹${b.total||'0.00'}</span>
+        <button class="ghost" onclick="restoreBill('${b.no}')">Restore</button>
+        <button class="danger" onclick="purgeBillForever('${b.no}')">Delete forever</button>
+      </div>`).join('');
+    return;
+  }
+
+  const bills=readBills().slice().sort((a,b)=>(b.updatedAt||'').localeCompare(a.updatedAt||''));
+  const filtered=bills.filter(b=>!q || b.no.toLowerCase().includes(q) || (b.name||'').toLowerCase().includes(q) || (b.phone||'').includes(q));
+  if(!filtered.length){ body.innerHTML=`<div class="empty">${bills.length? 'No bills match your search.' : 'No bills saved yet.'}</div>`; return; }
+  body.innerHTML=filtered.map(b=>{
+    const st=paymentStatus(b);
+    const stColor = st.label==='Paid' ? '#15803d' : st.label==='Partial' ? '#92400e' : st.label==='Unpaid' ? '#b91c1c' : 'var(--ink-soft)';
+    const stBg = st.label==='Paid' ? '#dcfce7' : st.label==='Partial' ? '#fef3c7' : st.label==='Unpaid' ? '#fee2e2' : 'transparent';
+    return `
+    <div class="regrow">
+      <span class="rno">${b.no}</span>
+      <span class="rname" onclick="loadBill('${b.no}')" style="cursor:pointer">
+        ${b.name||'(no name)'}<small>${b.date||''} ${b.phone? '· '+b.phone:''}</small>
+      </span>
+      <span class="ramt">₹${b.total||'0.00'}${st.label?` <span style="font-size:11px;padding:2px 8px;border-radius:999px;background:${stBg};color:${stColor};font-weight:700">${st.label}</span>`:''}</span>
+      <button class="ghost" onclick="loadBill('${b.no}')">Open</button>
+      <button class="ghost" onclick="savePDFFor('${b.no}')">PDF</button>
+      <button class="danger" onclick="deleteBill('${b.no}')">Delete</button>
+    </div>`;
+  }).join('');
+}
+function loadBill(no){
+  const bills=readBills();
+  const b=bills.find(x=>x.no===no);
+  if(!b) return;
+  currentBillNo=b.no;
+  $('billNoDisplay').textContent=b.no;
+  $('billDate').value=b.date||'';
+  $('pName').value=b.name||''; $('pAge').value=b.age||''; $('pSex').value=b.sex||'M'; $('pPhone').value=b.phone||'';
+  rows=[]; rowSeq=0;
+  payments=(b.payments||[]).slice();
+  (b.lines&&b.lines.length? b.lines : [{}]).forEach(l=>addRow({code:l.code,label:l.label||(l.code? procOptionValue(procedures.find(p=>p.code===l.code)||{code:l.code,name:''}) : ''),rate:l.rate,qty:l.qty}));
+  calcAll();
+  setSaveStatus('saved');
+  closeRegister();
+  toast(`Loaded bill ${b.no}.`);
+}
+function deleteBill(no){
+  const bills=readBills();
+  const bill=bills.find(b=>b.no===no);
+  if(!bill) return;
+  if(!confirm(`Move bill ${no} to Trash? It will NOT be permanently deleted — you can restore it from the Register any time.`)) return;
+  const remaining=bills.filter(b=>b.no!==no);
+  const trash=readTrash();
+  trash.push({...bill, deletedAt:new Date().toISOString()});
+  if(writeBills(remaining) && writeTrash(trash)){
+    toast(`Bill ${no} moved to Trash.`); updateTrashToggle(); renderRegister();
+    apiFetch(`/api/bills/${encodeURIComponent(no)}/trash`, { method:'POST' }).catch(err=>{
+      console.warn('Server trash-sync failed:', err.message);
+    });
+  }
+  else toast('Could not delete — storage error.',true);
+}
+function restoreBill(no){
+  const trash=readTrash();
+  const idx=trash.findIndex(b=>b.no===no);
+  if(idx<0) return;
+  const bill=trash[idx];
+  delete bill.deletedAt;
+  const bills=readBills();
+  if(bills.some(b=>b.no===no)){
+    toast(`Bill ${no} already exists — rename before restoring.`,true); return;
+  }
+  trash.splice(idx,1);
+  bills.push(bill);
+  if(writeBills(bills) && writeTrash(trash)){
+    toast(`Bill ${no} restored.`); updateTrashToggle(); renderRegister();
+    apiFetch(`/api/bills/${encodeURIComponent(no)}/restore`, { method:'POST' }).catch(err=>{
+      console.warn('Server restore-sync failed:', err.message);
+    });
+  }
+  else toast('Could not restore — storage error.',true);
+}
+function purgeBillForever(no){
+  if(!confirm(`Permanently delete bill ${no}? This cannot be undone, even with Trash.`)) return;
+  if(prompt(`Type DELETE to permanently remove bill ${no}:`)!=='DELETE'){ toast('Cancelled — nothing was deleted.'); return; }
+  const trash=readTrash().filter(b=>b.no!==no);
+  if(writeTrash(trash)){
+    toast(`Bill ${no} permanently deleted.`); updateTrashToggle(); renderRegister();
+    apiFetch(`/api/bills/${encodeURIComponent(no)}`, { method:'DELETE' }).catch(err=>{
+      console.warn('Server purge-sync failed:', err.message);
+    });
+  }
+  else toast('Could not delete — storage error.',true);
+}
+
+/* ---------- backup / export / import ---------- */
+function download(filename, content, type){
+  const blob=new Blob([content],{type});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 3000); // delay revoke so mobile browsers finish the download first
+}
+function exportJSON(){
+  const data={ bills: readBills(), trash: readTrash(), billCounter: getCounter(), exportedAt: new Date().toISOString() };
+  const d=new Date();
+  const dateStr=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  download(`billing(${dateStr}).json`, JSON.stringify(data,null,2), 'application/json');
+  try{ localStorage.setItem(K_LASTBACKUP,new Date().toISOString()); localStorage.setItem(K_UNBACKED,'0'); }catch(e){}
+  toast('Backup downloaded.');
+  dismissBanner();
+  updateBackupUI();
+}
+function importJSON(file){
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    let data;
+    try{ data=JSON.parse(e.target.result); }
+    catch(err){ toast('That file is not valid JSON.',true); return; }
+    const incoming=Array.isArray(data.bills)? data.bills : [];
+    const incomingTrash=Array.isArray(data.trash)? data.trash : [];
+    const existing=readBills();
+    const byNo=new Map(existing.map(b=>[b.no,b]));
+    let added=0, updated=0;
+    incoming.forEach(b=>{
+      if(byNo.has(b.no)) updated++; else added++;
+      byNo.set(b.no,b);
+    });
+    const merged=Array.from(byNo.values());
+    const existingTrash=readTrash();
+    const trashByNo=new Map(existingTrash.map(b=>[b.no,b]));
+    incomingTrash.forEach(b=>trashByNo.set(b.no,b));
+    const mergedTrash=Array.from(trashByNo.values());
+    if(!confirm(`This backup has ${incoming.length} bill(s): ${added} new, ${updated} will overwrite existing bills with the same number. Continue?`)) return;
+    if(writeBills(merged) && writeTrash(mergedTrash)){
+      if(data.billCounter && data.billCounter>getCounter()) setCounter(data.billCounter);
+      toast(`Restored: ${added} added, ${updated} updated.`);
+      updateTrashToggle();
+      renderRegister();
+      updateBackupUI();
+    }else{
+      toast('Restore failed — storage error.',true);
+    }
+  };
+  reader.readAsText(file);
+  $('importFile').value='';
+}
+function exportExcel(){
+  const bills=readBills();
+  if(!bills.length){ toast('No bills to export.',true); return; }
+  let csv='Bill No,Date,Patient,Phone,Total\n';
+  bills.forEach(b=>csv+=`${b.no},${b.date},"${(b.name||'').replace(/"/g,'""')}",${b.phone||''},${b.total}\n`);
+  download('JK_Dental_Bills.csv', csv, 'text/csv');
+  toast('CSV exported.');
+}
+
+/* ---------- backup reminder banner ---------- */
+function bumpUnbacked(){
+  try{
+    const n=(parseInt(localStorage.getItem(K_UNBACKED)||'0'))+1;
+    localStorage.setItem(K_UNBACKED,String(n));
+  }catch(e){}
+  updateBackupUI();
+}
+function updateBackupUI(){
+  const last=localStorage.getItem(K_LASTBACKUP);
+  const unbacked=parseInt(localStorage.getItem(K_UNBACKED)||'0');
+  $('lastBackupText').textContent = last ? `Last backup: ${new Date(last).toLocaleString()}` : 'No backup taken yet';
+  const daysSince = last ? (Date.now()-new Date(last).getTime())/86400000 : 999;
+  if(unbacked>=5 || daysSince>=3){
+    $('backupMsg').textContent = last
+      ? `${unbacked} bill(s) saved since your last backup.`
+      : `You have unbacked-up bills. Your Save is stored only in this browser.`;
+    $('backupBanner').style.display='flex';
+  }
+}
+function dismissBanner(){ $('backupBanner').style.display='none'; }
+
+/* ---------------------------------------------------------
+   PDF GENERATION — built by hand, no external library and
+   no browser print dialog. Produces a real .pdf file that
+   downloads with one click, works fully offline.
+--------------------------------------------------------- */
+const CP1252_MAP={0x2013:0x96,0x2014:0x97,0x2018:0x91,0x2019:0x92,0x201C:0x93,0x201D:0x94,0x2026:0x85};
+function sanitizeForPdf(str){
+  return String(str||'').replace(/₹/g,'Rs.').split('').map(ch=>{
+    const cp=ch.codePointAt(0);
+    if(cp<=255) return ch;
+    if(CP1252_MAP[cp]!==undefined) return String.fromCharCode(CP1252_MAP[cp]);
+    return '?';
+  }).join('');
+}
+function escapePdfText(str){
+  return sanitizeForPdf(str).replace(/\\/g,'\\\\').replace(/\(/g,'\\(').replace(/\)/g,'\\)');
+}
+function strToBytes(str){
+  const arr=new Uint8Array(str.length);
+  for(let i=0;i<str.length;i++) arr[i]=str.charCodeAt(i)&0xFF;
+  return arr;
+}
+function wrapText(text,maxWidth,fontSize){
+  const avgCharW=fontSize*0.52;
+  const maxChars=Math.max(10,Math.floor(maxWidth/avgCharW));
+  const words=String(text||'').split(' ');
+  const out=[]; let cur='';
+  words.forEach(w=>{
+    if((cur+' '+w).trim().length>maxChars){ if(cur) out.push(cur.trim()); cur=w; }
+    else cur=(cur+' '+w).trim();
+  });
+  if(cur) out.push(cur.trim());
+  return out.length?out:[''];
+}
+
+function buildPdfBytes(pagesContent){
+  const objBodies=[];
+  const fontF1Num=3, fontF2Num=4;
+  const firstPageNum=5;
+  const pageNums=pagesContent.map((_,i)=>firstPageNum+i*2);
+  const contentNums=pagesContent.map((_,i)=>firstPageNum+i*2+1);
+
+  objBodies[0]=`<< /Type /Catalog /Pages 2 0 R >>`; // obj 1
+  objBodies[1]=`<< /Type /Pages /Kids [${pageNums.map(n=>n+' 0 R').join(' ')}] /Count ${pageNums.length} >>`; // obj 2
+  objBodies[2]=`<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>`; // obj 3
+  objBodies[3]=`<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>`; // obj 4
+
+  pagesContent.forEach((page,i)=>{
+    let stream='0.6 w\n';
+    page.texts.forEach(t=>{
+      stream+=`BT /${t.font} ${t.size} Tf ${t.x.toFixed(2)} ${t.y.toFixed(2)} Td (${escapePdfText(t.text)}) Tj ET\n`;
+    });
+    page.lines.forEach(l=>{
+      stream+=`${l.x1.toFixed(2)} ${l.y1.toFixed(2)} m ${l.x2.toFixed(2)} ${l.y2.toFixed(2)} l S\n`;
+    });
+    const pageObjIndex=pageNums[i]-1;
+    const contentObjIndex=contentNums[i]-1;
+    objBodies[pageObjIndex]=`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 ${fontF1Num} 0 R /F2 ${fontF2Num} 0 R >> >> /Contents ${contentNums[i]} 0 R >>`;
+    objBodies[contentObjIndex]=`<< /Length ${stream.length} >>\nstream\n${stream}endstream`;
+  });
+
+  let out='%PDF-1.4\n';
+  const offsets=[0];
+  objBodies.forEach((body,idx)=>{
+    offsets.push(out.length);
+    out+=`${idx+1} 0 obj\n${body}\nendobj\n`;
+  });
+  const xrefStart=out.length;
+  out+=`xref\n0 ${objBodies.length+1}\n0000000000 65535 f \n`;
+  for(let i=1;i<=objBodies.length;i++) out+=String(offsets[i]).padStart(10,'0')+' 00000 n \n';
+  out+=`trailer\n<< /Size ${objBodies.length+1} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF`;
+  return strToBytes(out);
+}
+
+function generateBillPDF(bill){
+  const W=595.28,H=841.89,margin=50,bottomLimit=95;
+  const colProc=margin+35, colRate=W-margin-160, colQty=W-margin-95, colTotal=W-margin-60;
+  let pagesContent=[], texts=[], lines=[], y=H-60;
+
+  function flushPage(){ pagesContent.push({texts,lines}); texts=[]; lines=[]; }
+  function addText(text,x,yy,font,size){ texts.push({text:String(text),x,y:yy,font,size}); }
+  function addLine(x1,y1,x2,y2){ lines.push({x1,y1,x2,y2}); }
+  function drawTableHeader(){
+    addText('S.No',margin,y,'F2',9);
+    addText('Procedure',colProc,y,'F2',9);
+    addText('Rate',colRate,y,'F2',9);
+    addText('Qty',colQty,y,'F2',9);
+    addText('Total',colTotal,y,'F2',9);
+    y-=6; addLine(margin,y,W-margin,y); y-=13;
+  }
+  function ensureSpace(needed){
+    if(y-needed<bottomLimit){ flushPage(); y=H-60; drawTableHeader(); }
+  }
+
+  addText('J. K. Hospital Dental Care Center',margin,y,'F2',16); y-=18;
+  addText('38/53 D Bai Ka Bagh, Prayagraj',margin,y,'F1',9); y-=12;
+  addText('jkhospitalalld@gmail.com  |  9450595694',margin,y,'F1',9); y-=12;
+  addText('CMO Reg: 3351/3881 | NABH: 188/2023/1613 | AERB: 23-LOEE-885681',margin,y,'F1',8); y-=16;
+  addText(`Bill No: ${bill.no||''}`, W-margin-160, H-60, 'F2', 11);
+  addText(`Date: ${bill.date||''}`, W-margin-160, H-76, 'F1', 10);
+  addLine(margin,y,W-margin,y); y-=16;
+  addText(`Patient: ${bill.name||''}    Age: ${bill.age||''}    Sex: ${bill.sex||''}    Phone: ${bill.phone||''}`,margin,y,'F1',10); y-=20;
+  drawTableHeader();
+
+  (bill.lines||[]).forEach((l,i)=>{
+    const rawName=l.label||l.code||'';
+    const name=rawName.replace(/^[A-Za-z0-9]+\s*—\s*/,'');
+    const wrapped=wrapText(name, colRate-colProc-8, 9);
+    const rowH=Math.max(13, wrapped.length*11+2);
+    ensureSpace(rowH);
+    addText(String(i+1),margin,y,'F1',9);
+    wrapped.forEach((wl,wi)=>addText(wl,colProc,y-wi*11,'F1',9));
+    addText('Rs.'+(parseFloat(l.rate)||0).toFixed(2),colRate,y,'F1',9);
+    addText(String(l.qty||0),colQty,y,'F1',9);
+    addText('Rs.'+(parseFloat(l.total)||0).toFixed(2),colTotal,y,'F1',9);
+    y-=rowH;
+  });
+
+  ensureSpace(40);
+  addLine(margin,y,W-margin,y); y-=20;
+  addText('Grand Total: Rs.'+(bill.total||'0.00'),colRate,y,'F2',12);
+  y-=26;
+
+  const pmts = bill.payments || [];
+  const paidTotal = pmts.reduce((s,p)=>s+(parseFloat(p.amount)||0),0);
+  const balanceDue = Math.max(0, (parseFloat(bill.total)||0) - paidTotal);
+  const pmtRowH = 14;
+
+  if(pmts.length){
+    ensureSpace(24+pmts.length*pmtRowH);
+    addText('Payments received:',margin,y,'F2',11); y-=pmtRowH;
+    pmts.forEach(p=>{
+      ensureSpace(pmtRowH);
+      addText(`${p.date||''}   Rs.${(parseFloat(p.amount)||0).toFixed(2)}   ${p.note||''}`,margin,y,'F1',9);
+      y-=pmtRowH;
+    });
+    y-=6;
+  }
+
+  ensureSpace(40);
+  addText('Total Paid: Rs.'+paidTotal.toFixed(2),colRate,y,'F1',11); y-=pmtRowH;
+  ensureSpace(24);
+  addText(balanceDue<=0.004 ? 'Balance: PAID IN FULL' : 'Balance Due: Rs.'+balanceDue.toFixed(2),colRate,y,'F2',12);
+
+  flushPage();
+
+  return buildPdfBytes(pagesContent);
+}
+
+function pdfFileName(bill){
+  const safeName = (bill.name || 'Patient').trim().replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'Patient';
+  return `${safeName}_${bill.no}.pdf`;
+}
+function savePDFCurrent(){
+  saveBill(false);
+  try{
+    const bill=collectBill();
+    const bytes=generateBillPDF(bill);
+    const filename = pdfFileName(bill);
+    download(filename, bytes, 'application/pdf');
+    toast(`PDF saved: ${filename}`);
+  }catch(err){
+    console.error('PDF generation failed:', err);
+    toast('⚠️ PDF generation failed: ' + err.message, true);
+  }
+}
+function savePDFFor(no){
+  const b=readBills().find(x=>x.no===no);
+  if(!b){ toast('Bill not found.',true); return; }
+  try{
+    const bytes=generateBillPDF(b);
+    const filename = pdfFileName(b);
+    download(filename, bytes, 'application/pdf');
+    toast(`PDF saved: ${filename}`);
+  }catch(err){
+    console.error('PDF generation failed:', err);
+    toast('⚠️ PDF generation failed: ' + err.message, true);
+  }
+}
+
+/* ---------- toast ---------- */
+let toastTimer=null;
+function toast(msg,isErr){
+  const t=$('toast');
+  t.textContent=msg;
+  t.className='toast show'+(isErr?' err':'');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'), 3200);
+}
+
+/* ---------- boot ---------- */
+document.addEventListener('DOMContentLoaded',async ()=>{
+  try{
+    procedures = await apiFetch('/api/procedures');
+  }catch(err){
+    console.error('Could not load procedure list from server:', err.message);
+    toast('⚠️ Could not load procedure list from server.', true);
+  }
+  buildDatalist();
+  storageOK=storageSelfTest();
+  if(!storageOK){
+    setSaveStatus('error');
+    toast('Browser storage is unavailable (private/incognito mode?). Bills will not persist — use Backup JSON after every bill.',true);
+  }else{
+    const bills=readBills();
+    const counter=getCounter();
+    if(bills.length===0 && counter>0){
+      toast('No saved bills found, but bills were made before on this computer. This browser\'s storage may have been reset — check for a JSON backup file to restore.',true);
+    }
+  }
+  newBill().then(() => { applyIncomingPatient(); });
+  updateBackupUI();
+  document.addEventListener('visibilitychange',()=>{ if(document.hidden && dirty) saveBill(false); });
+
+  document.getElementById('opdFormLink').addEventListener('click', (e) => {
+    if (linkedPatientUHID) {
+      e.preventDefault();
+      window.location.href = '/index.html?uhid=' + encodeURIComponent(linkedPatientUHID);
+    }
+    // else let the plain link to /index.html go through as-is
+  });
+});
+
+// If we arrived here via the "Billing" link from the OPD form (with ?uhid=&name=&age=&sex= in the URL),
+// open that patient's most recent existing bill if one exists anywhere (any device), otherwise
+// start a fresh bill prefilled with their name/age/sex.
+let linkedPatientUHID = '';
+async function applyIncomingPatient(){
+  const params = new URLSearchParams(window.location.search);
+  const uhid = params.get('uhid');
+  if(!uhid) return;
+  linkedPatientUHID = uhid;
+
+  try{
+    const serverBills = await apiFetch('/api/bills');
+    const matches = serverBills.filter(b => b.patientUHID === uhid);
+    if(matches.length){
+      matches.sort((a,b) => new Date(b.updatedAt||0) - new Date(a.updatedAt||0));
+      const existing = matches[0];
+      // Make sure this bill is also in local storage so loadBill() can find it
+      const local = readBills();
+      if(!local.find(x=>x.no===existing.no)){ local.push(existing); writeBills(local); }
+      loadBill(existing.no);
+      toast(`Opened existing bill ${existing.no} for this patient.`);
+      return;
+    }
+  }catch(err){
+    console.warn('Could not check for existing bills, starting fresh:', err.message);
+  }
+
+  if(params.get('name')) $('pName').value = params.get('name');
+  if(params.get('age')) $('pAge').value = params.get('age');
+  if(params.get('sex')) $('pSex').value = params.get('sex');
+  toast(`New bill linked to patient ${uhid}`);
+}
+</script>
+</body>
+</html>
