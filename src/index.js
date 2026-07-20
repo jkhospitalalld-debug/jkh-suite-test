@@ -34,6 +34,27 @@ app.delete('/api/procedures/:code', async (c) => {
 });
 
 /* =========================================================
+   MASTER MEDICINE LIST (OPD form's prescription dropdown)
+   ========================================================= */
+
+app.get('/api/medicines', async (c) => {
+  const { results } = await c.env.DB.prepare('SELECT id, category, name FROM master_medicines ORDER BY category, name').all();
+  return c.json(results);
+});
+
+app.post('/api/medicines', async (c) => {
+  const { category, name } = await c.req.json();
+  if (!category || !name) return c.json({ error: 'category and name are required' }, 400);
+  await c.env.DB.prepare('INSERT INTO master_medicines (category, name) VALUES (?,?)').bind(category.trim(), name.trim()).run();
+  return c.json({ ok: true });
+});
+
+app.delete('/api/medicines/:id', async (c) => {
+  await c.env.DB.prepare('DELETE FROM master_medicines WHERE id = ?').bind(c.req.param('id')).run();
+  return c.json({ ok: true });
+});
+
+/* =========================================================
    PATIENTS (OPD form)
    ========================================================= */
 

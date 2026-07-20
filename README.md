@@ -13,6 +13,17 @@ procedure list feature safely before touching real patient/billing data.
   inside the app — no more GitHub editing for this
 - Includes all 135 procedures from your current Billing page, including your JK001–JK018
   custom additions
+- **New: X-Ray images on the OPD form** — "📷 Add X-Ray" button, works with your phone's
+  or computer's camera or gallery, auto-compresses before saving, shows a thumbnail
+  gallery per patient, click a thumbnail to view full-size, ✕ to delete. **Images are
+  saved locally in the browser on whichever computer you're using (via IndexedDB) — not
+  in the cloud database.** This matches your workflow: X-rays only needed in-clinic, so
+  no cloud storage service (and no card requirement) needed for this. Note: an X-ray
+  saved on the clinic computer will only show up on that same computer/browser, not on
+  other devices — this is intentional given how you described using them.
+- **New: "⚙ Medicines" button on the OPD form** — add or delete medicines (and even
+  whole new categories) from inside the app, same idea as the Procedures manager.
+  Includes all 51 medicines from your current form as a starting point.
 
 ## 1. Set up the test environment
 
@@ -32,12 +43,16 @@ procedure list feature safely before touching real patient/billing data.
    - Pick your new `jkh-suite-test` repo
    - This creates a new Worker, separate from your live one
 
-5. **Create the tables:** D1 → jkh-suite-test-db → Console, paste in the full contents
-   of `schema.sql`, run it.
+5. **Create the tables:** D1 → jkh-suite-test-db → Console. The D1 Console often fails
+   if you paste multiple `CREATE TABLE` statements at once — run each statement in
+   `schema.sql` **one at a time** (copy one block, run, clear, copy the next, repeat).
 
 6. **Load the procedure list:** same Console, paste in the full contents of
    `seed_procedures.sql`, run it. (This loads all 135 procedures — including your
    custom JK ones — into the new shared table.)
+
+6b. **Load the medicine list:** same Console, paste in the full contents of
+   `seed_medicines.sql`, run it. (Loads all 51 medicines from your current form.)
 
 7. Visit your new Worker's URL (something like
    `https://jkh-suite-test.<yoursubdomain>.workers.dev`) — should show the OPD form,
