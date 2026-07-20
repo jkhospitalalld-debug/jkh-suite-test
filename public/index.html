@@ -234,6 +234,7 @@
         <div class="section-title" style="margin-top:18px">
           <strong>Prescription / Medicines</strong>
           <div class="controls no-print">
+            <button id="manageMedsBtn" class="btn btn-muted" type="button">⚙ Medicines</button>
             <button id="savePatient" class="btn btn-primary">Save Patient</button>
             <button id="newPatient" class="btn btn-muted">New Patient</button>
           </div>
@@ -242,12 +243,6 @@
         <div class="med-controls">
           <select id="med_category" class="med-select proc-select" aria-label="Medicine category"style="width:100px" >
             <option value="">--Category--</option>
-            <option value="TAB">TABLETS (TAB)</option>
-            <option value="CAP">CAPSULES (CAP)</option>
-            <option value="SYP">SYRUPS (SYP)</option>
-            <option value="MOUTHWASH">MOUTH WASH</option>
-            <option value="GEL">GELS / OINTMENTS</option>
-            <option value="FLOSS">PROXA BRUSH / FLOSS</option>
                </select>
 
           <select id="med_dropdown" class="med-select" aria-label="Medicine name" style="width:410px" >
@@ -278,6 +273,16 @@
           <tbody id="med_body"></tbody>
         </table>
       </div>
+      <!-- ================= X-RAY IMAGES ================= -->
+      <div class="section-title" style="margin-top:22px">
+        <strong>X-Ray Images <span class="small" style="font-weight:400;color:#6b7280">(saved on this computer only)</span></strong>
+        <div class="controls no-print">
+          <input type="file" id="xrayFile" accept="image/*" capture="environment" style="display:none">
+          <button id="xrayUploadBtn" class="btn addBtn" type="button">📷 Add X-Ray</button>
+        </div>
+      </div>
+      <div id="xrayGallery" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;min-height:10px"></div>
+
       <!-- ================= VISIT HISTORY ================= -->
 
 <div class="section-title" style="margin-top:22px">
@@ -347,6 +352,24 @@
         </div>
       </div>
       <table style="width:100%"><thead><tr><th style="width:18%">Code</th><th>Procedure</th><th style="width:12%">Add</th></tr></thead><tbody id="master_body"></tbody></table>
+    </div>
+  </div>
+
+  <div id="medAdminModal" class="no-print" style="display:none;position:fixed;inset:0;background:rgba(2,6,23,0.45);align-items:center;justify-content:center;padding:12px">
+    <div style="background:#fff;border-radius:10px;max-width:720px;width:100%;padding:12px;max-height:86vh;overflow:auto">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <strong>Manage Medicines</strong>
+        <div>
+          <input id="medadmin_filter" placeholder="Filter..." style="padding:8px;border:1px solid var(--border);border-radius:8px;margin-right:8px" />
+          <button class="btn btn-muted" id="closeMedAdmin">Close</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 0;border-bottom:1px solid var(--border);margin-bottom:8px">
+        <input id="ma_category" placeholder="Category (e.g. TAB)" style="width:140px;padding:8px;border-radius:8px;border:1px solid var(--border);text-transform:uppercase">
+        <input id="ma_name" placeholder="Medicine name" style="flex:1;min-width:220px;padding:8px;border-radius:8px;border:1px solid var(--border)">
+        <button class="btn addBtn" id="addMedAdminBtn" type="button">＋ Add</button>
+      </div>
+      <table style="width:100%"><thead><tr><th style="width:20%">Category</th><th>Medicine</th><th style="width:10%">Del</th></tr></thead><tbody id="medadmin_body"></tbody></table>
     </div>
   </div>
 
@@ -464,7 +487,7 @@ async function apiFetch(path, opts = {}) {
 }
 
 const KEY_REGISTRY = 'ref_patient_registry_v9';
-const SYSTEM_ID ="T";   // 🔁 yahan change karna (A, B, C…)
+const SYSTEM_ID ="M";   // 🔁 yahan change karna (A, B, C…)
 let registry = loadJSON(KEY_REGISTRY) || [ ];
 
 
@@ -472,34 +495,7 @@ let registry = loadJSON(KEY_REGISTRY) || [ ];
 let MASTER = [];  // loaded from /api/procedures at runtime (shared with Billing)
 
 /* ------------- MEDICINE CATEGORIES ------------- */
-const MED_CATEGORIES = {
-  "TAB": [
-"Tab MOXIND CV 625","Tab MOXIND CV 375","Tab CLAVUM 625","Tab BLESSMOX CV 625",
-"Tab AUGMENTIN 625","Tab AUGMENTIN 375","Tab CEFTUM 500","Tab CEFAKIND 250","GUDCEF 200",
-"Tab LEVOFLOX 500","Tab ZENFLOX OZ","Tab CIPROFLOX 500","Tab METROGYL ER",
-"Tab METROGYL 400","Tab HYFENAC P","Tab FLOZEN PLUS","Tab JIYAGESIC P",
-"Tab COMBIFLAME","Tab ULTRACET","Tab ACECLOFENAC +PARACETAMOL","Tab ACEFLAME P",
-"Tab NIMUSULIDE PARACTAMOL","Tab DOLOKIND PLUS","Tab DOLOKIND AA",
-"Tab DICLOFENAC+PCM","Tab NOBEL MR","Tab PANTOP D","Tab PANTAKIND DSR",
-"Tab RANITIDINE 150/300","Tab ACELOC 300","Tab CHYMORAL FORT","Tab CLONAFIT 0.25 mg 1 TAB SOS/hs"
-  ],
-  "CAP": [
-"Cap OMEPRAZOLE","Cap VIZYLZC"
-  ],
-  "SYP": [
-"Syp AUGMENTIN","Syp IBUGESIC P"
-  ],
-  "MOUTHWASH": [
-"BETADINE GARGLE","BETAKIND GARGLE","THERMOKIND MOUTH WASH"
-  ],
-  "GEL": [
-"ORNIGRATE GEL","METROGYLDG GEL","HEXIMETRO GEL","ORAWAYS GEL",
-"TURBOCORT GEL","KENACORT GEL","TESS GEL","MUCOPAIN GEL","SENOLIN SF GEL"
-  ],
-  "FLOSS": [
-"THERMOKIND TOOTHPASTE","THERMOSEAL DENTAL FLOSS","THERMOSEAL PROXA BRUSH"
-  ]
-};
+let MED_CATEGORIES = {};  // loaded from /api/medicines at runtime
 
 
 
@@ -552,11 +548,45 @@ async function loadMasterProcedures(){
   }
 }
 
+const MED_CATEGORY_LABELS = {
+  TAB: 'TABLETS (TAB)', CAP: 'CAPSULES (CAP)', SYP: 'SYRUPS (SYP)',
+  MOUTHWASH: 'MOUTH WASH', GEL: 'GELS / OINTMENTS', FLOSS: 'PROXA BRUSH / FLOSS'
+};
+function populateMedCategorySelect(){
+  const sel = medCategory;
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">--Category--</option>';
+  Object.keys(MED_CATEGORIES).sort().forEach(cat => {
+    const o = document.createElement('option');
+    o.value = cat;
+    o.textContent = MED_CATEGORY_LABELS[cat] || cat;
+    sel.appendChild(o);
+  });
+  sel.value = prev;
+}
+
+let MEDICINES_FLAT = [];  // [{id, category, name}] - flat list, used by the admin screen
+async function loadMasterMedicines(){
+  try {
+    MEDICINES_FLAT = await apiFetch('/api/medicines');
+    MED_CATEGORIES = {};
+    MEDICINES_FLAT.forEach(m => {
+      if (!MED_CATEGORIES[m.category]) MED_CATEGORIES[m.category] = [];
+      MED_CATEGORIES[m.category].push(m.name);
+    });
+    populateMedCategorySelect();
+  } catch (e) {
+    console.error('Could not load medicine list from server:', e.message);
+    alert('⚠️ Could not load medicine list from server.');
+  }
+}
+
 async function init(){
 
   const today=new Date();
 
   await loadMasterProcedures();
+  await loadMasterMedicines();
 
   const incomingUHID = new URLSearchParams(window.location.search).get('uhid');
   if (incomingUHID) {
@@ -597,6 +627,139 @@ async function init(){
 
 }
 init();
+
+/* ------------- X-Ray Images (stored LOCALLY on this computer only, via IndexedDB) ------------- */
+const xrayFileInput = document.getElementById('xrayFile');
+const xrayUploadBtn = document.getElementById('xrayUploadBtn');
+const xrayGallery = document.getElementById('xrayGallery');
+
+const XRAY_DB_NAME = 'jkh_xrays_db';
+const XRAY_STORE = 'xrays';
+let xrayDBPromise = null;
+
+function openXrayDB(){
+  if (xrayDBPromise) return xrayDBPromise;
+  xrayDBPromise = new Promise((resolve, reject) => {
+    const req = indexedDB.open(XRAY_DB_NAME, 1);
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(XRAY_STORE)) {
+        const store = db.createObjectStore(XRAY_STORE, { keyPath: 'id', autoIncrement: true });
+        store.createIndex('uhid', 'uhid', { unique: false });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+  return xrayDBPromise;
+}
+async function saveXrayLocal(uhid, blob, filename){
+  const db = await openXrayDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(XRAY_STORE, 'readwrite');
+    const req = tx.objectStore(XRAY_STORE).add({ uhid, blob, filename, uploadedAt: new Date().toISOString() });
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function listXraysLocal(uhid){
+  const db = await openXrayDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(XRAY_STORE, 'readonly');
+    const req = tx.objectStore(XRAY_STORE).index('uhid').getAll(uhid);
+    req.onsuccess = () => resolve(req.result.sort((a,b)=> new Date(b.uploadedAt)-new Date(a.uploadedAt)));
+    req.onerror = () => reject(req.error);
+  });
+}
+async function deleteXrayLocal(id){
+  const db = await openXrayDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(XRAY_STORE, 'readwrite');
+    tx.objectStore(XRAY_STORE).delete(id);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+function compressImageToBlob(file, maxDim=1600, quality=0.8){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Could not read file'));
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('Could not read image'));
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          const scale = maxDim / Math.max(width, height);
+          width = Math.round(width*scale); height = Math.round(height*scale);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('Compression failed')), 'image/jpeg', quality);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+xrayUploadBtn.addEventListener('click', () => {
+  if (!uhidEl.value) { alert('Please wait for the UHID to be ready before adding an X-Ray.'); return; }
+  xrayFileInput.click();
+});
+
+xrayFileInput.addEventListener('change', async () => {
+  const file = xrayFileInput.files[0];
+  xrayFileInput.value = '';
+  if (!file) return;
+  xrayUploadBtn.disabled = true;
+  xrayUploadBtn.textContent = 'Saving…';
+  try {
+    const blob = await compressImageToBlob(file);
+    await saveXrayLocal(uhidEl.value, blob, file.name);
+    await renderXrayGallery();
+  } catch (e) {
+    alert('⚠️ Could not save X-Ray: ' + e.message);
+  } finally {
+    xrayUploadBtn.disabled = false;
+    xrayUploadBtn.textContent = '📷 Add X-Ray';
+  }
+});
+
+async function renderXrayGallery(){
+  if (!uhidEl.value) { xrayGallery.innerHTML=''; return; }
+  xrayGallery.innerHTML = '<span class="small">Loading…</span>';
+  try {
+    const list = await listXraysLocal(uhidEl.value);
+    if (!list.length) { xrayGallery.innerHTML = '<span class="small" style="color:#6b7280">No X-Rays saved on this computer yet.</span>'; return; }
+    xrayGallery.innerHTML = '';
+    list.forEach(x => {
+      const url = URL.createObjectURL(x.blob);
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'position:relative;width:120px';
+      wrap.innerHTML = `
+        <a href="${url}" target="_blank">
+          <img src="${url}" style="width:120px;height:120px;object-fit:cover;border-radius:8px;border:1px solid var(--border)">
+        </a>
+        <button class="no-print" data-xray-del="${x.id}" title="Delete"
+          style="position:absolute;top:4px;right:4px;background:#ef4444;color:#fff;border:0;border-radius:999px;width:22px;height:22px;cursor:pointer;font-size:13px;line-height:1">✕</button>`;
+      xrayGallery.appendChild(wrap);
+    });
+    xrayGallery.querySelectorAll('[data-xray-del]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Delete this X-Ray from this computer?')) return;
+        try {
+          await deleteXrayLocal(Number(btn.getAttribute('data-xray-del')));
+          renderXrayGallery();
+        } catch (e) { alert('Delete failed: ' + e.message); }
+      });
+    });
+  } catch (e) {
+    xrayGallery.innerHTML = '<span class="small" style="color:#ef4444">Could not load X-Rays.</span>';
+  }
+}
 
 async function refreshLinkedBill(){
   const uhid = uhidEl.value;
@@ -650,7 +813,7 @@ async function genUHID(){
     return genUHID_local();
   }
 }
-async function updateUHID(){ uhidEl.value = await genUHID(); form.uhid = uhidEl.value; saveForm(); refreshLinkedBill(); }
+async function updateUHID(){ uhidEl.value = await genUHID(); form.uhid = uhidEl.value; saveForm(); refreshLinkedBill(); renderXrayGallery(); }
 
 /* ------------- procedures populate & sync ------------- */
 function populateProcedureSelects(){ procCode.innerHTML='<option value="">--Code--</option>'; procName.innerHTML='<option value="">--Procedure--</option>'; MASTER.forEach(m=>{ const oc=document.createElement('option'); oc.value=m.code; oc.textContent=m.code; procCode.appendChild(oc); const on=document.createElement('option'); on.value=m.code; on.textContent=m.procedure; procName.appendChild(on); }); procCode.addEventListener('change', ()=>{ const code=procCode.value; procName.value=code||''; }); procName.addEventListener('change', ()=>{ const code=procName.value; procCode.value=code||''; }); }
@@ -747,6 +910,48 @@ function renderItems() {
 openMaster.addEventListener('click', ()=>{ masterModal.style.display='flex'; masterFilter.value=''; renderMaster(); });
 closeMaster.addEventListener('click', ()=>{ masterModal.style.display='none'; });
 function renderMaster(){ const q=(masterFilter.value||'').trim().toLowerCase(); masterBody.innerHTML=''; const list=MASTER.filter(m=>{ if(!q) return true; return m.code.toLowerCase().includes(q)||m.procedure.toLowerCase().includes(q); }); if(list.length===0){ masterBody.innerHTML='<tr><td colspan="3" style="padding:12px;color:#6b7280;text-align:center">No procedures found.</td></tr>'; return; } list.forEach(m=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td style="padding:8px">${esc(m.code)}</td><td style="padding:8px">${esc(m.procedure)}</td><td style="padding:8px;text-align:center"><button data-add="${m.code}" class="addBtn">Add</button></td>`; masterBody.appendChild(tr); }); masterBody.querySelectorAll('button[data-add]').forEach(b=>{ b.addEventListener('click',()=>{ const code=b.getAttribute('data-add'); const m=MASTER.find(x=>x.code===code); if(m){ items.push({code:m.code,procedure:m.procedure,no:1}); saveItems(); renderItems(); masterModal.style.display='none'; } }); }); }
+
+/* ---------- Manage Medicines ---------- */
+const medAdminModal=document.getElementById('medAdminModal'), medAdminBody=document.getElementById('medadmin_body'),
+medAdminFilter=document.getElementById('medadmin_filter'), manageMedsBtn=document.getElementById('manageMedsBtn'),
+closeMedAdmin=document.getElementById('closeMedAdmin'), maCategory=document.getElementById('ma_category'),
+maName=document.getElementById('ma_name'), addMedAdminBtn=document.getElementById('addMedAdminBtn');
+
+manageMedsBtn.addEventListener('click', ()=>{ medAdminFilter.value=''; maCategory.value=''; maName.value=''; renderMedAdmin(); medAdminModal.style.display='flex'; });
+closeMedAdmin.addEventListener('click', ()=>{ medAdminModal.style.display='none'; });
+medAdminFilter.addEventListener('input', renderMedAdmin);
+
+function renderMedAdmin(){
+  const q=(medAdminFilter.value||'').trim().toLowerCase();
+  const list=[...MEDICINES_FLAT].sort((a,b)=> a.category.localeCompare(b.category) || a.name.localeCompare(b.name))
+    .filter(m => !q || m.category.toLowerCase().includes(q) || m.name.toLowerCase().includes(q));
+  if(!list.length){ medAdminBody.innerHTML='<tr><td colspan="3" style="padding:12px;color:#6b7280;text-align:center">No medicines found.</td></tr>'; return; }
+  medAdminBody.innerHTML = list.map(m => `
+    <tr><td style="padding:8px">${esc(m.category)}</td><td style="padding:8px">${esc(m.name)}</td>
+    <td style="padding:8px;text-align:center"><button data-meddel="${m.id}" class="danger-btn">Del</button></td></tr>`).join('');
+  medAdminBody.querySelectorAll('[data-meddel]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if(!confirm('Delete this medicine from the list?')) return;
+      try {
+        await apiFetch('/api/medicines/' + btn.getAttribute('data-meddel'), { method:'DELETE' });
+        await loadMasterMedicines();
+        renderMedAdmin();
+      } catch(e) { alert('Delete failed: ' + e.message); }
+    });
+  });
+}
+
+addMedAdminBtn.addEventListener('click', async () => {
+  const category = maCategory.value.trim().toUpperCase();
+  const name = maName.value.trim();
+  if(!category || !name){ alert('Category and medicine name are required.'); return; }
+  try {
+    await apiFetch('/api/medicines', { method:'POST', body:{category, name} });
+    await loadMasterMedicines();
+    maCategory.value=''; maName.value='';
+    renderMedAdmin();
+  } catch(e) { alert('Could not add: ' + e.message); }
+});
 masterFilter.addEventListener('input', renderMaster);
 
 /* ------------- MEDICINES: populate by category, add, render ------------- */
@@ -1521,6 +1726,7 @@ visits = data.visits ? [...data.visits] : [];
 renderMeds();
 renderVisits();
 refreshLinkedBill();
+renderXrayGallery();
 }
   /* ---------------- JSON EXPORT ---------------- */
 const exportJSONBtn = document.getElementById('exportJSON');
