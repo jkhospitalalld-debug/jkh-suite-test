@@ -83,7 +83,7 @@ app.post('/api/patients', async (c) => {
   await c.env.DB.prepare(
     `INSERT INTO patients (id, name, date, data, created_at, updated_at) VALUES (?,?,?,?,?,?)
      ON CONFLICT(id) DO UPDATE SET name=excluded.name, date=excluded.date, data=excluded.data, updated_at=excluded.updated_at`
-  ).bind(body.id, name, date, data, now, now).run();
+  ).bind(body.id, name, date, data, body.created_at || body.createdAt || now, now).run();
   return c.json({ ok: true, id: body.id, updated_at: now });
 });
 
@@ -98,7 +98,8 @@ app.post('/api/patients/bulk', async (c) => {
   const batch = arr.filter((p) => p.id).map((p) => stmt.bind(
     p.id, p.form?.name || '', p.form?.date || '',
     JSON.stringify({ form: p.form || {}, items: p.items || [], meds: p.meds || [], visits: p.visits || [] }),
-    now, now
+    p.created_at || p.createdAt || now,   // preserve original creation time from the backup if present
+    now
   ));
   if (batch.length) await c.env.DB.batch(batch);
   return c.json({ ok: true, count: batch.length });
