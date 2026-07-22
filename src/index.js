@@ -98,7 +98,7 @@ app.post('/api/patients/bulk', async (c) => {
   const batch = arr.filter((p) => p.id).map((p) => stmt.bind(
     p.id, p.form?.name || '', p.form?.date || '',
     JSON.stringify({ form: p.form || {}, items: p.items || [], meds: p.meds || [], visits: p.visits || [] }),
-    p.created_at || p.createdAt || now,   // preserve original creation time from the backup if present
+    p.created_at || p.createdAt || now,
     now
   ));
   if (batch.length) await c.env.DB.batch(batch);
