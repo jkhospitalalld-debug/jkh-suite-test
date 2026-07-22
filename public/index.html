@@ -121,7 +121,8 @@
   </div>
   <div class="container">
     <div id="userBar" class="no-print">
-      <a href="#" id="billingLink" style="text-decoration:none;padding:6px 10px;border-radius:8px;border:1px dashed var(--border);color:var(--accent);font-weight:700">🧾 Billing</a>
+      <a href="#" id="billingLink" style="text-decoration:none;padding:6px 10px;border-radius:8px;border:1px dashed var(--border);color:var(--accent);font-weight:700">🧾 Bill this Patient</a>
+      <a href="#" id="newBillLink" title="Start a second, separate bill for this same patient" style="text-decoration:none;padding:6px 10px;border-radius:8px;border:1px dashed var(--border);color:var(--muted);font-size:13px">+ New Bill for this Patient</a>
       <span id="whoami"></span>
       <button id="logoutBtn" type="button">Logout</button>
     </div>
@@ -473,6 +474,19 @@ document.getElementById('billingLink').addEventListener('click', (e) => {
   window.location.href = '/billing.html?' + params.toString();
 });
 
+document.getElementById('newBillLink').addEventListener('click', (e) => {
+  e.preventDefault();
+  if (!confirm('This patient may already have a bill. Start a separate, brand-new bill for them anyway?')) return;
+  const params = new URLSearchParams({
+    uhid: document.getElementById('uhid').value || '',
+    name: document.getElementById('name').value || '',
+    age: document.getElementById('age').value || '',
+    sex: document.getElementById('sex').value || '',
+    forceNew: '1'
+  });
+  window.location.href = '/billing.html?' + params.toString();
+});
+
 // Wrapper around fetch that adds the login token and gracefully handles
 // being offline or logged out - callers should not assume this always succeeds.
 async function apiFetch(path, opts = {}) {
@@ -487,7 +501,7 @@ async function apiFetch(path, opts = {}) {
 }
 
 const KEY_REGISTRY = 'ref_patient_registry_v9';
-const SYSTEM_ID ="X";   // 🔁 yahan change karna (A, B, C…)
+const SYSTEM_ID ="M";   // 🔁 yahan change karna (A, B, C…)
 let registry = loadJSON(KEY_REGISTRY) || [ ];
 
 

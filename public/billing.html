@@ -1180,28 +1180,31 @@ async function applyIncomingPatient(){
   const uhid = params.get('uhid');
   if(!uhid) return;
   linkedPatientUHID = uhid;
+  const forceNew = params.get('forceNew') === '1';
 
-  try{
-    const serverBills = await apiFetch('/api/bills');
-    const matches = serverBills.filter(b => b.patientUHID === uhid);
-    if(matches.length){
-      matches.sort((a,b) => new Date(b.updatedAt||0) - new Date(a.updatedAt||0));
-      const existing = matches[0];
-      // Make sure this bill is also in local storage so loadBill() can find it
-      const local = readBills();
-      if(!local.find(x=>x.no===existing.no)){ local.push(existing); writeBills(local); }
-      loadBill(existing.no);
-      toast(`Opened existing bill ${existing.no} for this patient.`);
-      return;
+  if(!forceNew){
+    try{
+      const serverBills = await apiFetch('/api/bills');
+      const matches = serverBills.filter(b => b.patientUHID === uhid);
+      if(matches.length){
+        matches.sort((a,b) => new Date(b.updatedAt||0) - new Date(a.updatedAt||0));
+        const existing = matches[0];
+        // Make sure this bill is also in local storage so loadBill() can find it
+        const local = readBills();
+        if(!local.find(x=>x.no===existing.no)){ local.push(existing); writeBills(local); }
+        loadBill(existing.no);
+        toast(`Opened existing bill ${existing.no} for this patient.`);
+        return;
+      }
+    }catch(err){
+      console.warn('Could not check for existing bills, starting fresh:', err.message);
     }
-  }catch(err){
-    console.warn('Could not check for existing bills, starting fresh:', err.message);
   }
 
   if(params.get('name')) $('pName').value = params.get('name');
   if(params.get('age')) $('pAge').value = params.get('age');
   if(params.get('sex')) $('pSex').value = params.get('sex');
-  toast(`New bill linked to patient ${uhid}`);
+  toast(forceNew ? `New separate bill started for patient ${uhid}` : `New bill linked to patient ${uhid}`);
 }
 </script>
 </body>
