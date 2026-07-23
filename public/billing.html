@@ -214,9 +214,28 @@ tbody tr:hover{background:var(--paper);}
   th,td{font-size:14px;}
   .totalbar .amt{background:none;color:#000;font-size:20px;}
 }
+#loginOverlay{position:fixed;inset:0;background:#0f172a;display:flex;align-items:center;justify-content:center;z-index:9999}
+#loginOverlay .box{background:#fff;padding:28px;border-radius:12px;width:100%;max-width:340px;box-shadow:0 8px 28px rgba(0,0,0,0.3)}
+#loginOverlay h2{margin:0 0 4px;color:var(--teal);font-size:18px}
+#loginOverlay p{margin:0 0 16px;color:var(--ink-soft);font-size:13px}
+#loginOverlay input{width:100%;padding:10px;border-radius:8px;border:1px solid var(--line);margin-bottom:12px;font-size:15px}
+#loginOverlay button{width:100%;padding:11px;border-radius:8px;border:0;background:var(--teal);color:#fff;font-weight:700;font-size:15px;cursor:pointer}
+#loginErr{color:var(--danger);font-size:13px;margin-bottom:10px;min-height:16px}
+#billingUserBar{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-soft)}
 </style>
 </head>
 <body>
+
+<div id="loginOverlay">
+  <form class="box" id="loginForm">
+    <h2>J. K. Hospital Dental Care Center</h2>
+    <p>Sign in to continue — Billing</p>
+    <div id="loginErr"></div>
+    <input id="loginUser" type="text" placeholder="Username" autocomplete="username" required />
+    <input id="loginPass" type="password" placeholder="Password" autocomplete="current-password" required />
+    <button type="submit" id="loginBtn">Sign in</button>
+  </form>
+</div>
 
 <div class="topbar">
   <div class="topbar-inner">
@@ -230,6 +249,10 @@ tbody tr:hover{background:var(--paper);}
       <button onclick="window.print()">Print</button>
       <button onclick="openRegister()">Register</button>
       <button onclick="openProcAdmin()">⚙ Procedures</button>
+      <div id="billingUserBar">
+        <span id="billingWhoami"></span>
+        <button class="ghost" id="billingLogoutBtn" type="button">Logout</button>
+      </div>
     </div>
   </div>
 </div>
@@ -382,13 +405,86 @@ let storageOK=true;
    these calls sync to the shared D1 database in the background
    so bills are visible across devices too.
 --------------------------------------------------------- */
+/* ---------------------------------------------------------
+   LOGIN / AUTH — uses the SAME localStorage keys as index.html
+   (jkh_token / jkh_user), since both pages are same-origin.
+   Logging in on one page keeps you logged in on the other too.
+--------------------------------------------------------- */
 const API_BASE='';
+let AUTH_TOKEN = localStorage.getItem('jkh_token') || null;
+let AUTH_USER = JSON.parse(localStorage.getItem('jkh_user') || 'null');
+
+function showLogin(){ document.getElementById('loginOverlay').style.display='flex'; }
+function hideLogin(){ document.getElementById('loginOverlay').style.display='none'; }
+if (AUTH_TOKEN) { hideLogin(); } else { showLogin(); }
+
+function updateBillingWhoami(){
+  const el = document.getElementById('billingWhoami');
+  if (el) el.textContent = AUTH_USER ? `${AUTH_USER.full_name || AUTH_USER.username} (${AUTH_USER.role})` : '';
+}
+updateBillingWhoami();
+
+function applyBillingRoleVisibility(){
+  const isAdmin = AUTH_USER?.role === 'admin';
+  document.querySelectorAll('.admin-only').forEach(el => { el.style.display = isAdmin ? '' : 'none'; });
+}
+applyBillingRoleVisibility();
+
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const errEl = document.getElementById('loginErr');
+  const btn = document.getElementById('loginBtn');
+  errEl.textContent = '';
+  btn.disabled = true; btn.textContent = 'Signing in...';
+  try {
+    const res = await fetch(API_BASE + '/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: document.getElementById('loginUser').value.trim(),
+        password: document.getElementById('loginPass').value
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Login failed');
+    AUTH_TOKEN = data.token; AUTH_USER = data.user;
+    localStorage.setItem('jkh_token', AUTH_TOKEN);
+    localStorage.setItem('jkh_user', JSON.stringify(AUTH_USER));
+    updateBillingWhoami();
+    applyBillingRoleVisibility();
+    hideLogin();
+    location.reload(); // simplest way to (re)run all the page's normal startup logic now that we're authenticated
+  } catch (err) {
+    errEl.textContent = err.message;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Sign in';
+  }
+});
+
+document.getElementById('billingLogoutBtn').addEventListener('click', () => {
+  AUTH_TOKEN = null; AUTH_USER = null;
+  localStorage.removeItem('jkh_token'); localStorage.removeItem('jkh_user');
+  showLogin();
+});
+
+/* ---------------------------------------------------------
+   SERVER SYNC — same-origin API served by this Worker.
+   Local storage stays the source of truth for instant saves;
+   these calls sync to the shared D1 database in the background
+   so bills are visible across devices too.
+--------------------------------------------------------- */
 async function apiFetch(path, opts={}){
   const res = await fetch(API_BASE + path, {
     ...opts,
-    headers: { 'Content-Type':'application/json', ...(opts.headers||{}) },
+    headers: { 'Content-Type':'application/json', ...(AUTH_TOKEN ? { Authorization: 'Bearer ' + AUTH_TOKEN } : {}), ...(opts.headers||{}) },
     body: opts.body ? JSON.stringify(opts.body) : undefined
   });
+  if (res.status === 401) {
+    AUTH_TOKEN = null; AUTH_USER = null;
+    localStorage.removeItem('jkh_token'); localStorage.removeItem('jkh_user');
+    showLogin();
+    throw new Error('Session expired - please log in again');
+  }
   const data = await res.json().catch(()=>({}));
   if(!res.ok) throw new Error(data.error || 'Request failed');
   return data;
@@ -708,9 +804,10 @@ function renderProcAdmin(){
         <td style="padding:8px;text-align:right">${p.rate.toFixed(2)}</td>
         <td style="padding:8px;white-space:nowrap">
           <button class="ghost" onclick="editProcAdmin('${p.code}')">Edit</button>
-          <button class="danger" onclick="deleteProcAdmin('${p.code}')">Delete</button>
+          <button class="danger admin-only" onclick="deleteProcAdmin('${p.code}')">Delete</button>
         </td>
       </tr>`).join('') + `</tbody></table>`;
+  applyBillingRoleVisibility();
 }
 function editProcAdmin(code){
   const p=procedures.find(x=>x.code===code);
@@ -762,7 +859,7 @@ function renderRegister(){
   if(regShowTrash){
     const trash=readTrash().slice().sort((a,b)=>(b.deletedAt||'').localeCompare(a.deletedAt||''));
     const filtered=trash.filter(b=>!q || b.no.toLowerCase().includes(q) || (b.name||'').toLowerCase().includes(q) || (b.phone||'').includes(q));
-    if(!filtered.length){ body.innerHTML=`<div class="empty">${trash.length? 'No trashed bills match your search.' : 'Trash is empty. Deleted bills show up here and can be restored any time.'}</div>`; return; }
+    if(!filtered.length){ body.innerHTML=`<div class="empty">${trash.length? 'No trashed bills match your search.' : 'Trash is empty. Deleted bills show up here and can be restored any time.'}</div>`; applyBillingRoleVisibility(); return; }
     body.innerHTML=filtered.map(b=>`
       <div class="regrow">
         <span class="rno">${b.no}</span>
@@ -771,14 +868,15 @@ function renderRegister(){
         </span>
         <span class="ramt">₹${b.total||'0.00'}</span>
         <button class="ghost" onclick="restoreBill('${b.no}')">Restore</button>
-        <button class="danger" onclick="purgeBillForever('${b.no}')">Delete forever</button>
+        <button class="danger admin-only" onclick="purgeBillForever('${b.no}')">Delete forever</button>
       </div>`).join('');
+    applyBillingRoleVisibility();
     return;
   }
 
   const bills=readBills().slice().sort((a,b)=>(b.updatedAt||'').localeCompare(a.updatedAt||''));
   const filtered=bills.filter(b=>!q || b.no.toLowerCase().includes(q) || (b.name||'').toLowerCase().includes(q) || (b.phone||'').includes(q));
-  if(!filtered.length){ body.innerHTML=`<div class="empty">${bills.length? 'No bills match your search.' : 'No bills saved yet.'}</div>`; return; }
+  if(!filtered.length){ body.innerHTML=`<div class="empty">${bills.length? 'No bills match your search.' : 'No bills saved yet.'}</div>`; applyBillingRoleVisibility(); return; }
   body.innerHTML=filtered.map(b=>{
     const st=paymentStatus(b);
     const stColor = st.label==='Paid' ? '#15803d' : st.label==='Partial' ? '#92400e' : st.label==='Unpaid' ? '#b91c1c' : 'var(--ink-soft)';
@@ -792,9 +890,10 @@ function renderRegister(){
       <span class="ramt">₹${b.total||'0.00'}${st.label?` <span style="font-size:11px;padding:2px 8px;border-radius:999px;background:${stBg};color:${stColor};font-weight:700">${st.label}</span>`:''}</span>
       <button class="ghost" onclick="loadBill('${b.no}')">Open</button>
       <button class="ghost" onclick="savePDFFor('${b.no}')">PDF</button>
-      <button class="danger" onclick="deleteBill('${b.no}')">Delete</button>
+      <button class="danger admin-only" onclick="deleteBill('${b.no}')">Delete</button>
     </div>`;
   }).join('');
+  applyBillingRoleVisibility();
 }
 function loadBill(no){
   const bills=readBills();
@@ -1140,6 +1239,7 @@ function toast(msg,isErr){
 
 /* ---------- boot ---------- */
 document.addEventListener('DOMContentLoaded',async ()=>{
+  if (!AUTH_TOKEN) return; // wait for login - loginForm submit handler reloads the page once signed in
   try{
     procedures = await apiFetch('/api/procedures');
   }catch(err){

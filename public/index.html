@@ -124,6 +124,7 @@
       <a href="#" id="billingLink" style="text-decoration:none;padding:6px 10px;border-radius:8px;border:1px dashed var(--border);color:var(--accent);font-weight:700">🧾 Bill this Patient</a>
       <a href="#" id="newBillLink" title="Start a second, separate bill for this same patient" style="text-decoration:none;padding:6px 10px;border-radius:8px;border:1px dashed var(--border);color:var(--muted);font-size:13px">+ New Bill for this Patient</a>
       <span id="whoami"></span>
+      <button id="manageUsersBtn" type="button" class="admin-only">👤 Users</button>
       <button id="logoutBtn" type="button">Logout</button>
     </div>
     <div class="card">
@@ -376,6 +377,26 @@
     </div>
   </div>
 
+  <div id="userAdminModal" class="no-print" style="display:none;position:fixed;inset:0;background:rgba(2,6,23,0.45);align-items:center;justify-content:center;padding:12px">
+    <div style="background:#fff;border-radius:10px;max-width:600px;width:100%;padding:12px;max-height:86vh;overflow:auto">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <strong>Manage Staff Logins</strong>
+        <button class="btn btn-muted" id="closeUserAdmin">Close</button>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 0;border-bottom:1px solid var(--border);margin-bottom:8px">
+        <input id="ua_username" placeholder="Username" style="width:140px;padding:8px;border-radius:8px;border:1px solid var(--border)">
+        <input id="ua_fullname" placeholder="Full name" style="width:160px;padding:8px;border-radius:8px;border:1px solid var(--border)">
+        <input id="ua_password" placeholder="Password" type="text" style="width:140px;padding:8px;border-radius:8px;border:1px solid var(--border)">
+        <select id="ua_role" style="padding:8px;border-radius:8px;border:1px solid var(--border)">
+          <option value="staff">Staff (create only)</option>
+          <option value="admin">Admin (full control)</option>
+        </select>
+        <button class="btn addBtn" id="addUserAdminBtn" type="button">＋ Add Login</button>
+      </div>
+      <table style="width:100%"><thead><tr><th>Username</th><th>Full name</th><th style="width:15%">Role</th><th style="width:10%">Del</th></tr></thead><tbody id="useradmin_body"></tbody></table>
+    </div>
+  </div>
+
 <div id="savedModal" class="no-print" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;">
   <div style="background:#fff;padding:15px;border-radius:10px;width:90%;max-width:800px;max-height:80vh;overflow:auto">
     <div style="display:flex;
@@ -422,13 +443,19 @@ let AUTH_USER = JSON.parse(localStorage.getItem('jkh_user') || 'null');
 function showLogin() { document.getElementById('loginOverlay').style.display = 'flex'; }
 function hideLogin() { document.getElementById('loginOverlay').style.display = 'none'; }
 
-if (AUTH_TOKEN) { hideLogin(); } else { hideLogin(); } // login disabled - always hidden
+if (AUTH_TOKEN) { hideLogin(); } else { showLogin(); }
 
 function updateWhoami() {
   const el = document.getElementById('whoami');
   if (el) el.textContent = AUTH_USER ? `${AUTH_USER.full_name || AUTH_USER.username} (${AUTH_USER.role})` : '';
 }
 updateWhoami();
+
+function applyRoleVisibility(){
+  const isAdmin = AUTH_USER?.role === 'admin';
+  document.querySelectorAll('.admin-only').forEach(el => { el.style.display = isAdmin ? '' : 'none'; });
+}
+applyRoleVisibility();
 
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -451,7 +478,9 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     localStorage.setItem('jkh_token', AUTH_TOKEN);
     localStorage.setItem('jkh_user', JSON.stringify(AUTH_USER));
     updateWhoami();
+    applyRoleVisibility();
     hideLogin();
+    init();
   } catch (err) {
     errEl.textContent = err.message;
   } finally {
@@ -497,6 +526,12 @@ async function apiFetch(path, opts = {}) {
     headers: { 'Content-Type': 'application/json', ...(AUTH_TOKEN ? { Authorization: 'Bearer ' + AUTH_TOKEN } : {}), ...(opts.headers || {}) },
     body: opts.body ? JSON.stringify(opts.body) : undefined
   });
+  if (res.status === 401) {
+    AUTH_TOKEN = null; AUTH_USER = null;
+    localStorage.removeItem('jkh_token'); localStorage.removeItem('jkh_user');
+    showLogin();
+    throw new Error('Session expired - please log in again');
+  }
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || 'Request failed');
   return data;
@@ -642,7 +677,7 @@ async function init(){
   updateUHID();
 
 }
-init();
+if (AUTH_TOKEN) { init(); }
 
 /* ------------- X-Ray Images (stored LOCALLY on this computer only, via IndexedDB) ------------- */
 const xrayFileInput = document.getElementById('xrayFile');
@@ -964,7 +999,7 @@ function renderMedAdmin(){
   if(!list.length){ medAdminBody.innerHTML='<tr><td colspan="3" style="padding:12px;color:#6b7280;text-align:center">No medicines found.</td></tr>'; return; }
   medAdminBody.innerHTML = list.map(m => `
     <tr><td style="padding:8px">${esc(m.category)}</td><td style="padding:8px">${esc(m.name)}</td>
-    <td style="padding:8px;text-align:center"><button data-meddel="${m.id}" class="danger-btn">Del</button></td></tr>`).join('');
+    <td class="admin-only" style="padding:8px;text-align:center"><button data-meddel="${m.id}" class="danger-btn">Del</button></td></tr>`).join('');
   medAdminBody.querySelectorAll('[data-meddel]').forEach(btn => {
     btn.addEventListener('click', async () => {
       if(!confirm('Delete this medicine from the list?')) return;
@@ -975,6 +1010,7 @@ function renderMedAdmin(){
       } catch(e) { alert('Delete failed: ' + e.message); }
     });
   });
+  applyRoleVisibility();
 }
 
 addMedAdminBtn.addEventListener('click', async () => {
@@ -989,6 +1025,56 @@ addMedAdminBtn.addEventListener('click', async () => {
   } catch(e) { alert('Could not add: ' + e.message); }
 });
 masterFilter.addEventListener('input', renderMaster);
+
+/* ---------- Manage Staff Logins (admin only) ---------- */
+const userAdminModal=document.getElementById('userAdminModal'), userAdminBody=document.getElementById('useradmin_body'),
+manageUsersBtn=document.getElementById('manageUsersBtn'), closeUserAdmin=document.getElementById('closeUserAdmin'),
+uaUsername=document.getElementById('ua_username'), uaFullname=document.getElementById('ua_fullname'),
+uaPassword=document.getElementById('ua_password'), uaRole=document.getElementById('ua_role'),
+addUserAdminBtn=document.getElementById('addUserAdminBtn');
+
+manageUsersBtn.addEventListener('click', () => {
+  uaUsername.value=''; uaFullname.value=''; uaPassword.value=''; uaRole.value='staff';
+  renderUserAdmin();
+  userAdminModal.style.display='flex';
+});
+closeUserAdmin.addEventListener('click', () => { userAdminModal.style.display='none'; });
+
+async function renderUserAdmin(){
+  userAdminBody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:12px">Loading…</td></tr>';
+  try {
+    const users = await apiFetch('/api/users');
+    if(!users.length){ userAdminBody.innerHTML='<tr><td colspan="4" style="text-align:center;padding:12px;color:#6b7280">No logins found.</td></tr>'; return; }
+    userAdminBody.innerHTML = users.map(u => `
+      <tr><td style="padding:8px">${esc(u.username)}</td><td style="padding:8px">${esc(u.full_name||'')}</td>
+      <td style="padding:8px">${esc(u.role)}</td>
+      <td style="padding:8px;text-align:center">${u.id===AUTH_USER.id ? '<span class="small">(you)</span>' : `<button data-userdel="${u.id}" class="danger-btn">Del</button>`}</td></tr>`).join('');
+    userAdminBody.querySelectorAll('[data-userdel]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if(!confirm('Remove this login? They will no longer be able to sign in.')) return;
+        try {
+          await apiFetch('/api/users/' + btn.getAttribute('data-userdel'), { method:'DELETE' });
+          renderUserAdmin();
+        } catch(e) { alert('Could not delete: ' + e.message); }
+      });
+    });
+  } catch(e) {
+    userAdminBody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:12px;color:#ef4444">${esc(e.message)}</td></tr>`;
+  }
+}
+
+addUserAdminBtn.addEventListener('click', async () => {
+  const username = uaUsername.value.trim();
+  const password = uaPassword.value;
+  const full_name = uaFullname.value.trim();
+  const role = uaRole.value;
+  if(!username || !password){ alert('Username and password are required.'); return; }
+  try {
+    await apiFetch('/api/users', { method:'POST', body:{username, password, full_name, role} });
+    uaUsername.value=''; uaFullname.value=''; uaPassword.value=''; uaRole.value='staff';
+    renderUserAdmin();
+  } catch(e) { alert('Could not add login: ' + e.message); }
+});
 
 /* ------------- MEDICINES: populate by category, add, render ------------- */
 function populateMedDropdown(category){
@@ -1709,11 +1795,13 @@ const filtered = [...registry]
       <td>${p.form.name}</td>
       <td>${formatCreatedAt(p) || p.form.date || ''}</td>
       <td><button data-id="${p.id}" class="btn addBtn">Load</button></td>
-      <td><button data-del="${p.id}" class="danger-btn">Delete</button></td>
+      <td class="admin-only"><button data-del="${p.id}" class="danger-btn">Delete</button></td>
     `;
 
     savedBody.appendChild(tr);
   });
+
+  applyRoleVisibility();
 
   // LOAD (SEARCH SAFE FIX)
 savedBody.querySelectorAll('[data-id]').forEach(btn=>{
@@ -1727,17 +1815,19 @@ savedBody.querySelectorAll('[data-id]').forEach(btn=>{
 
   // DELETE
   savedBody.querySelectorAll('[data-del]').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
+  btn.addEventListener('click', async ()=>{
     const id = btn.getAttribute('data-del');
 
     if(confirm("Delete this patient?")){
-      const index = registry.findIndex(p => p.id === id);
-      registry.splice(index,1);
-      localStorage.setItem(KEY_REGISTRY, JSON.stringify(registry));
-      renderSavedList(savedSearch.value);
-      apiFetch('/api/patients/' + encodeURIComponent(id), { method: 'DELETE' }).catch(err => {
-        console.warn('Server delete failed:', err.message);
-      });
+      try {
+        await apiFetch('/api/patients/' + encodeURIComponent(id), { method: 'DELETE' });
+        const index = registry.findIndex(p => p.id === id);
+        if (index >= 0) registry.splice(index,1);
+        localStorage.setItem(KEY_REGISTRY, JSON.stringify(registry));
+        renderSavedList(savedSearch.value);
+      } catch (err) {
+        alert('Delete failed: ' + err.message);
+      }
     }
   });
 });
