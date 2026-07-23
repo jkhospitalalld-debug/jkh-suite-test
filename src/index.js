@@ -1,12 +1,115 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import { sign, verify } from 'hono/jwt';
 
 const app = new Hono();
 
-// Public - no login required (matches how the clinic actually uses this).
 app.use('*', cors());
 
+/* =========================================================
+   PASSWORD HASHING (PBKDF2 via Web Crypto - fast enough for
+   the Workers Free plan's CPU limit, unlike bcrypt's JS impl)
+   ========================================================= */
+const PBKDF2_ITERATIONS = 100000;
+
+function bufToHex(buf) {
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+}
+function hexToBuf(hex) {
+  const bytes = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < bytes.length; i++) bytes[i] = parseInt(hex.substr(i * 2, 2), 16);
+  return bytes;
+}
+async function hashPassword(password) {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const keyMaterial = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt, iterations: PBKDF2_ITERATIONS, hash: 'SHA-256' }, keyMaterial, 256);
+  return `${bufToHex(salt)}:${bufToHex(bits)}`;
+}
+async function verifyPassword(password, stored) {
+  const [saltHex, hashHex] = (stored || '').split(':');
+  if (!saltHex || !hashHex) return false;
+  const salt = hexToBuf(saltHex);
+  const keyMaterial = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt, iterations: PBKDF2_ITERATIONS, hash: 'SHA-256' }, keyMaterial, 256);
+  return bufToHex(bits) === hashHex;
+}
+
+/* =========================================================
+   AUTH: login + session middleware + user management
+   ========================================================= */
+
 app.get('/api/health', (c) => c.json({ ok: true, service: 'jkh-dental-suite' }));
+
+app.post('/api/login', async (c) => {
+  const { username, password } = await c.req.json().catch(() => ({}));
+  if (!username || !password) return c.json({ error: 'Username and password required' }, 400);
+
+  const user = await c.env.DB.prepare('SELECT * FROM users WHERE username = ?')
+    .bind(username.trim().toLowerCase()).first();
+  if (!user) return c.json({ error: 'Invalid username or password' }, 401);
+
+  const ok = await verifyPassword(password, user.password_hash);
+  if (!ok) return c.json({ error: 'Invalid username or password' }, 401);
+
+  const token = await sign(
+    { id: user.id, username: user.username, role: user.role, full_name: user.full_name,
+      exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 30 }, // 30 days
+    c.env.JWT_SECRET
+  );
+  return c.json({ token, user: { id: user.id, username: user.username, full_name: user.full_name, role: user.role } });
+});
+
+async function requireAuth(c, next) {
+  const header = c.req.header('Authorization') || '';
+  const token = header.startsWith('Bearer ') ? header.slice(7) : null;
+  if (!token) return c.json({ error: 'Not authenticated' }, 401);
+  try {
+    c.set('user', await verify(token, c.env.JWT_SECRET));
+    await next();
+  } catch {
+    return c.json({ error: 'Invalid or expired session' }, 401);
+  }
+}
+
+async function requireAdmin(c, next) {
+  if (c.get('user')?.role !== 'admin') return c.json({ error: 'Admin only' }, 403);
+  await next();
+}
+
+// Everything below this line requires login (except /api/login and /api/health above, and static files)
+app.use('/api/*', requireAuth);
+
+app.get('/api/me', (c) => c.json({ user: c.get('user') }));
+
+// Admin-only: manage staff/doctor logins
+app.get('/api/users', requireAdmin, async (c) => {
+  const { results } = await c.env.DB.prepare('SELECT id, username, full_name, role, created_at FROM users ORDER BY id').all();
+  return c.json(results);
+});
+
+app.post('/api/users', requireAdmin, async (c) => {
+  const { username, password, full_name, role } = await c.req.json();
+  if (!username || !password) return c.json({ error: 'Username and password required' }, 400);
+  const hash = await hashPassword(password);
+  try {
+    const result = await c.env.DB.prepare(
+      `INSERT INTO users (username, password_hash, full_name, role) VALUES (?,?,?,?)
+       RETURNING id, username, full_name, role`
+    ).bind(username.trim().toLowerCase(), hash, full_name || null, role === 'admin' ? 'admin' : 'staff').first();
+    return c.json(result);
+  } catch (e) {
+    if (String(e.message).includes('UNIQUE')) return c.json({ error: 'Username already exists' }, 409);
+    return c.json({ error: 'Server error' }, 500);
+  }
+});
+
+app.delete('/api/users/:id', requireAdmin, async (c) => {
+  const targetId = Number(c.req.param('id'));
+  if (targetId === c.get('user').id) return c.json({ error: "You can't delete your own login while logged in as it." }, 400);
+  await c.env.DB.prepare('DELETE FROM users WHERE id = ?').bind(targetId).run();
+  return c.json({ ok: true });
+});
 
 /* =========================================================
    MASTER PROCEDURE LIST (shared by OPD form + Billing)
@@ -28,7 +131,7 @@ app.post('/api/procedures', async (c) => {
   return c.json({ ok: true });
 });
 
-app.delete('/api/procedures/:code', async (c) => {
+app.delete('/api/procedures/:code', requireAdmin, async (c) => {
   await c.env.DB.prepare('DELETE FROM master_procedures WHERE code = ?').bind(c.req.param('code')).run();
   return c.json({ ok: true });
 });
@@ -49,7 +152,7 @@ app.post('/api/medicines', async (c) => {
   return c.json({ ok: true });
 });
 
-app.delete('/api/medicines/:id', async (c) => {
+app.delete('/api/medicines/:id', requireAdmin, async (c) => {
   await c.env.DB.prepare('DELETE FROM master_medicines WHERE id = ?').bind(c.req.param('id')).run();
   return c.json({ ok: true });
 });
@@ -105,7 +208,7 @@ app.post('/api/patients/bulk', async (c) => {
   return c.json({ ok: true, count: batch.length });
 });
 
-app.delete('/api/patients/:id', async (c) => {
+app.delete('/api/patients/:id', requireAdmin, async (c) => {
   await c.env.DB.prepare('DELETE FROM patients WHERE id = ?').bind(c.req.param('id')).run();
   return c.json({ ok: true });
 });
@@ -173,8 +276,8 @@ app.post('/api/bills', async (c) => {
   return c.json({ ok: true, no: bill.no, updated_at: now });
 });
 
-// Soft delete (move to trash) / restore
-app.post('/api/bills/:no/trash', async (c) => {
+// Soft delete (move to trash) - admin only / restore - any logged-in user
+app.post('/api/bills/:no/trash', requireAdmin, async (c) => {
   await c.env.DB.prepare('UPDATE bills SET deleted = 1, updated_at = ? WHERE no = ?')
     .bind(new Date().toISOString(), c.req.param('no')).run();
   return c.json({ ok: true });
@@ -184,8 +287,8 @@ app.post('/api/bills/:no/restore', async (c) => {
     .bind(new Date().toISOString(), c.req.param('no')).run();
   return c.json({ ok: true });
 });
-// Permanent delete
-app.delete('/api/bills/:no', async (c) => {
+// Permanent delete - admin only
+app.delete('/api/bills/:no', requireAdmin, async (c) => {
   await c.env.DB.prepare('DELETE FROM bills WHERE no = ?').bind(c.req.param('no')).run();
   return c.json({ ok: true });
 });
