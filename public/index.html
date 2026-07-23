@@ -161,8 +161,10 @@
             <input id="date" type="date" />
           </div>
           <div class="field">
-            <label class="small">Bill No (linked)</label>
-            <input id="billno" type="text" placeholder="No bill yet" readonly style="background:#f1f5f9;cursor:not-allowed" />
+            <label class="small">Bill No (linked) — select to open</label>
+            <select id="billno" style="background:#f1f5f9">
+              <option value="">No bill yet</option>
+            </select>
           </div>
         </div>
       </header>
@@ -777,16 +779,36 @@ async function renderXrayGallery(){
 
 async function refreshLinkedBill(){
   const uhid = uhidEl.value;
-  if (!uhid) { billEl.value=''; return; }
+  if (!uhid) { billEl.innerHTML = '<option value="">No bill yet</option>'; return; }
   try {
     const res = await fetch(API_BASE + '/api/bills/by-patient/' + encodeURIComponent(uhid));
     if (!res.ok) throw new Error('server error');
     const bills = await res.json();
-    billEl.value = bills.length ? bills[0].no : '';
+    bills.sort((a,b) => new Date(b.updatedAt||0) - new Date(a.updatedAt||0));
+    if (!bills.length) {
+      billEl.innerHTML = '<option value="">No bill yet</option>';
+      return;
+    }
+    billEl.innerHTML = bills.map(b =>
+      `<option value="${b.no}">${b.no} — ₹${b.total || '0.00'}${b.date ? ' — ' + b.date : ''}</option>`
+    ).join('');
+    billEl.value = bills[0].no; // most recent selected by default
   } catch (e) {
     console.warn('Could not check for linked bill:', e.message);
   }
 }
+
+billEl.addEventListener('change', () => {
+  if (!billEl.value || !uhidEl.value) return;
+  const params = new URLSearchParams({
+    uhid: uhidEl.value,
+    name: nameEl.value || '',
+    age: ageEl.value || '',
+    sex: sexEl.value || '',
+    openBill: billEl.value
+  });
+  window.location.href = '/billing.html?' + params.toString();
+});
 
 /* ------------- UHID ------------- */
 function genUHID_local(){

@@ -1181,8 +1181,27 @@ async function applyIncomingPatient(){
   if(!uhid) return;
   linkedPatientUHID = uhid;
   const forceNew = params.get('forceNew') === '1';
+  const openBillNo = params.get('openBill');
 
-  if(!forceNew){
+  // Explicit request to open one specific bill (e.g. picked from the OPD form's dropdown)
+  if(openBillNo){
+    try{
+      const serverBills = await apiFetch('/api/bills');
+      const target = serverBills.find(b => b.no === openBillNo);
+      if(target){
+        const local = readBills();
+        if(!local.find(x=>x.no===target.no)){ local.push(target); writeBills(local); }
+        loadBill(target.no);
+        toast(`Opened bill ${target.no}.`);
+        return;
+      }
+      toast(`Bill ${openBillNo} not found - starting fresh.`, true);
+    }catch(err){
+      console.warn('Could not open specific bill, starting fresh:', err.message);
+    }
+  }
+
+  if(!forceNew && !openBillNo){
     try{
       const serverBills = await apiFetch('/api/bills');
       const matches = serverBills.filter(b => b.patientUHID === uhid);
