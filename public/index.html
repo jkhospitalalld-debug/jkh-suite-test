@@ -121,8 +121,7 @@
   </div>
   <div class="container">
     <div id="userBar" class="no-print">
-      <a href="#" id="billingLink" style="text-decoration:none;padding:6px 10px;border-radius:8px;border:1px dashed var(--border);color:var(--accent);font-weight:700">🧾 Bill this Patient</a>
-      <a href="#" id="newBillLink" title="Start a second, separate bill for this same patient" style="text-decoration:none;padding:6px 10px;border-radius:8px;border:1px dashed var(--border);color:var(--muted);font-size:13px">+ New Bill for this Patient</a>
+      <a href="#" id="billingLink" style="text-decoration:none;padding:6px 10px;border-radius:8px;border:1px dashed var(--border);color:var(--accent);font-weight:700">🧾 Billing</a>
       <span id="whoami"></span>
       <button id="logoutBtn" type="button">Logout</button>
     </div>
@@ -276,7 +275,7 @@
       </div>
       <!-- ================= X-RAY IMAGES ================= -->
       <div class="section-title" style="margin-top:22px">
-        <strong>X-Ray Images <span class="small" style="font-weight:400;color:#6b7280">(saved on this computer only)</span></strong>
+        <strong>X-Ray Images <span class="small" style="font-weight:400;color:#6b7280">(synced across all devices)</span></strong>
         <div class="controls no-print">
           <input type="file" id="xrayFile" accept="image/*" capture="environment" style="display:none">
           <button id="xrayUploadBtn" class="btn addBtn" type="button">📷 Add X-Ray</button>
@@ -474,19 +473,6 @@ document.getElementById('billingLink').addEventListener('click', (e) => {
   window.location.href = '/billing.html?' + params.toString();
 });
 
-document.getElementById('newBillLink').addEventListener('click', (e) => {
-  e.preventDefault();
-  if (!confirm('This patient may already have a bill. Start a separate, brand-new bill for them anyway?')) return;
-  const params = new URLSearchParams({
-    uhid: document.getElementById('uhid').value || '',
-    name: document.getElementById('name').value || '',
-    age: document.getElementById('age').value || '',
-    sex: document.getElementById('sex').value || '',
-    forceNew: '1'
-  });
-  window.location.href = '/billing.html?' + params.toString();
-});
-
 // Wrapper around fetch that adds the login token and gracefully handles
 // being offline or logged out - callers should not assume this always succeeds.
 async function apiFetch(path, opts = {}) {
@@ -642,60 +628,12 @@ async function init(){
 }
 init();
 
-/* ------------- X-Ray Images (stored LOCALLY on this computer only, via IndexedDB) ------------- */
+/* ------------- X-Ray Images (stored in D1 database, synced across all devices) ------------- */
 const xrayFileInput = document.getElementById('xrayFile');
 const xrayUploadBtn = document.getElementById('xrayUploadBtn');
 const xrayGallery = document.getElementById('xrayGallery');
 
-const XRAY_DB_NAME = 'jkh_xrays_db';
-const XRAY_STORE = 'xrays';
-let xrayDBPromise = null;
-
-function openXrayDB(){
-  if (xrayDBPromise) return xrayDBPromise;
-  xrayDBPromise = new Promise((resolve, reject) => {
-    const req = indexedDB.open(XRAY_DB_NAME, 1);
-    req.onupgradeneeded = (e) => {
-      const db = e.target.result;
-      if (!db.objectStoreNames.contains(XRAY_STORE)) {
-        const store = db.createObjectStore(XRAY_STORE, { keyPath: 'id', autoIncrement: true });
-        store.createIndex('uhid', 'uhid', { unique: false });
-      }
-    };
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
-  return xrayDBPromise;
-}
-async function saveXrayLocal(uhid, blob, filename){
-  const db = await openXrayDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(XRAY_STORE, 'readwrite');
-    const req = tx.objectStore(XRAY_STORE).add({ uhid, blob, filename, uploadedAt: new Date().toISOString() });
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
-}
-async function listXraysLocal(uhid){
-  const db = await openXrayDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(XRAY_STORE, 'readonly');
-    const req = tx.objectStore(XRAY_STORE).index('uhid').getAll(uhid);
-    req.onsuccess = () => resolve(req.result.sort((a,b)=> new Date(b.uploadedAt)-new Date(a.uploadedAt)));
-    req.onerror = () => reject(req.error);
-  });
-}
-async function deleteXrayLocal(id){
-  const db = await openXrayDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(XRAY_STORE, 'readwrite');
-    tx.objectStore(XRAY_STORE).delete(id);
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
-}
-
-function compressImageToBlob(file, maxDim=1600, quality=0.8){
+function compressImageToDataURL(file, maxDim=1600, quality=0.8){
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onerror = () => reject(new Error('Could not read file'));
@@ -711,7 +649,7 @@ function compressImageToBlob(file, maxDim=1600, quality=0.8){
         const canvas = document.createElement('canvas');
         canvas.width = width; canvas.height = height;
         canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-        canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('Compression failed')), 'image/jpeg', quality);
+        resolve(canvas.toDataURL('image/jpeg', quality));
       };
       img.src = e.target.result;
     };
@@ -731,8 +669,8 @@ xrayFileInput.addEventListener('change', async () => {
   xrayUploadBtn.disabled = true;
   xrayUploadBtn.textContent = 'Saving…';
   try {
-    const blob = await compressImageToBlob(file);
-    await saveXrayLocal(uhidEl.value, blob, file.name);
+    const dataUrl = await compressImageToDataURL(file);
+    await apiFetch('/api/xrays', { method: 'POST', body: { uhid: uhidEl.value, filename: file.name, data: dataUrl } });
     await renderXrayGallery();
   } catch (e) {
     alert('⚠️ Could not save X-Ray: ' + e.message);
@@ -746,16 +684,15 @@ async function renderXrayGallery(){
   if (!uhidEl.value) { xrayGallery.innerHTML=''; return; }
   xrayGallery.innerHTML = '<span class="small">Loading…</span>';
   try {
-    const list = await listXraysLocal(uhidEl.value);
-    if (!list.length) { xrayGallery.innerHTML = '<span class="small" style="color:#6b7280">No X-Rays saved on this computer yet.</span>'; return; }
+    const list = await apiFetch('/api/xrays/' + encodeURIComponent(uhidEl.value));
+    if (!list.length) { xrayGallery.innerHTML = '<span class="small" style="color:#6b7280">No X-Rays saved for this patient yet.</span>'; return; }
     xrayGallery.innerHTML = '';
     list.forEach(x => {
-      const url = URL.createObjectURL(x.blob);
       const wrap = document.createElement('div');
       wrap.style.cssText = 'position:relative;width:120px';
       wrap.innerHTML = `
-        <a href="${url}" target="_blank">
-          <img src="${url}" style="width:120px;height:120px;object-fit:cover;border-radius:8px;border:1px solid var(--border)">
+        <a href="${x.data}" target="_blank">
+          <img src="${x.data}" style="width:120px;height:120px;object-fit:cover;border-radius:8px;border:1px solid var(--border)">
         </a>
         <button class="no-print" data-xray-del="${x.id}" title="Delete"
           style="position:absolute;top:4px;right:4px;background:#ef4444;color:#fff;border:0;border-radius:999px;width:22px;height:22px;cursor:pointer;font-size:13px;line-height:1">✕</button>`;
@@ -763,9 +700,9 @@ async function renderXrayGallery(){
     });
     xrayGallery.querySelectorAll('[data-xray-del]').forEach(btn => {
       btn.addEventListener('click', async () => {
-        if (!confirm('Delete this X-Ray from this computer?')) return;
+        if (!confirm('Delete this X-Ray?')) return;
         try {
-          await deleteXrayLocal(Number(btn.getAttribute('data-xray-del')));
+          await apiFetch('/api/xrays/' + btn.getAttribute('data-xray-del'), { method: 'DELETE' });
           renderXrayGallery();
         } catch (e) { alert('Delete failed: ' + e.message); }
       });
@@ -1747,14 +1684,23 @@ const exportJSONBtn = document.getElementById('exportJSON');
 const importJSONBtn = document.getElementById('importJSON');
 const jsonFileInput = document.getElementById('jsonFile');
 
-exportJSONBtn.addEventListener('click', () => {
+exportJSONBtn.addEventListener('click', async () => {
 
   if (registry.length === 0) {
     alert("Koi data nahi hai export karne ke liye");
     return;
   }
 
-  const dataStr = JSON.stringify(registry, null, 2);
+  let bills = [], billsTrash = [];
+  try {
+    bills = await apiFetch('/api/bills');
+    billsTrash = await apiFetch('/api/bills?trash=1');
+  } catch (e) {
+    console.warn('Could not fetch bills for backup (patients will still be backed up):', e.message);
+  }
+
+  const dataObj = { patients: registry, bills, billsTrash, exportedAt: new Date().toISOString() };
+  const dataStr = JSON.stringify(dataObj, null, 2);
   const blob = new Blob([dataStr], { type: "application/json" });
 
   const url = URL.createObjectURL(blob);
@@ -1786,19 +1732,51 @@ if(!confirm("Existing data merge hoga. Continue?")) {
 
   const reader = new FileReader();
 
-  reader.onload = function (e) {
+  reader.onload = async function (e) {
     try {
-      const importedData = JSON.parse(e.target.result);
+      const parsed = JSON.parse(e.target.result);
 
-      if (!Array.isArray(importedData)) {
+      // Support both the new combined format {patients, bills, billsTrash}
+      // and the old plain-array format (patients only) for backward compatibility.
+      const importedData = Array.isArray(parsed) ? parsed : (Array.isArray(parsed.patients) ? parsed.patients : []);
+      const importedBills = Array.isArray(parsed.bills) ? parsed.bills : [];
+      const importedBillsTrash = Array.isArray(parsed.billsTrash) ? parsed.billsTrash : [];
+
+      if (!importedData.length && !importedBills.length && !importedBillsTrash.length) {
         alert("Invalid JSON format ❌");
         return;
       }
 
+      // Fetch current server patients so we can detect UHID clashes
+      // (same UHID but a different patient name = two different apps/devices
+      // generated the same UHID - we must NOT let one overwrite the other).
+      let serverById = {};
+      try {
+        const serverPatients = await apiFetch('/api/patients');
+        serverPatients.forEach(p => { serverById[p.id] = p; });
+      } catch (err) {
+        console.warn('Could not fetch server patients for clash check (continuing without it):', err.message);
+      }
+
       let added = 0;
       let updated = 0;
+      let renamed = 0;
 
       importedData.forEach(newPatient => {
+
+        const existingServer = serverById[newPatient.id];
+        const importedName = (newPatient.form?.name || '').trim().toLowerCase();
+        const existingName = (existingServer?.form?.name || '').trim().toLowerCase();
+
+        if (existingServer && importedName && existingName && importedName !== existingName) {
+          // Same UHID, different patient name -> give the imported patient a new,
+          // distinct UHID instead of overwriting the existing one.
+          const suffix = 'IMP' + Math.random().toString(36).slice(2, 7).toUpperCase();
+          const oldId = newPatient.id;
+          newPatient.id = oldId + '-' + suffix;
+          if (newPatient.form) newPatient.form.uhid = newPatient.id;
+          renamed++;
+        }
 
         const index = registry.findIndex(p => p.id === newPatient.id);
 
@@ -1814,11 +1792,39 @@ if(!confirm("Existing data merge hoga. Continue?")) {
 
       localStorage.setItem(KEY_REGISTRY, JSON.stringify(registry));
 
-      alert(`Backup Merge Done ✅\nNew: ${added}\nUpdated: ${updated}`);
+      if (importedData.length) {
+        try {
+          await apiFetch('/api/patients/bulk', { method: 'POST', body: importedData });
+        } catch (err) {
+          console.warn('Server bulk sync failed for patients (saved locally anyway):', err.message);
+        }
+      }
 
-      apiFetch('/api/patients/bulk', { method: 'POST', body: importedData }).catch(err => {
-        console.warn('Server bulk sync failed (saved locally anyway):', err.message);
-      });
+      // Restore bills (no bulk endpoint for bills, so one at a time).
+      let billsRestored = 0;
+      for (const bill of importedBills) {
+        try {
+          await apiFetch('/api/bills', { method: 'POST', body: bill });
+          billsRestored++;
+        } catch (err) {
+          console.warn('Could not restore bill', bill.no, err.message);
+        }
+      }
+      for (const bill of importedBillsTrash) {
+        try {
+          await apiFetch('/api/bills', { method: 'POST', body: bill });
+          await apiFetch('/api/bills/' + encodeURIComponent(bill.no) + '/trash', { method: 'POST' });
+          billsRestored++;
+        } catch (err) {
+          console.warn('Could not restore trashed bill', bill.no, err.message);
+        }
+      }
+
+      let msg = `Backup Merge Done ✅\nPatients — New: ${added}, Updated: ${updated}`;
+      if (renamed) msg += `\n⚠️ ${renamed} patient(s) had a UHID clash with a different-named patient — given a new UHID so nothing was overwritten.`;
+      const totalBills = importedBills.length + importedBillsTrash.length;
+      if (totalBills) msg += `\nBills restored: ${billsRestored}/${totalBills}`;
+      alert(msg);
 
     } catch (err) {
       alert("JSON file galat hai ❌");
