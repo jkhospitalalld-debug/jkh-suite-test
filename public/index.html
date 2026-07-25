@@ -401,7 +401,7 @@ style="width:100%;padding:8px;margin-bottom:10px;border:1px solid #ccc;border-ra
         <tr>
           <th>UHID</th>
           <th>Name</th>
-          <th>Created</th>
+          <th>Visit Date</th>
           <th>Load</th>
           <th>Delete</th>
         </tr>
@@ -1649,11 +1649,26 @@ viewSaved.addEventListener('click', async () => {
 });
 
 function patientTimestamp(p){
+  // Prefer the doctor-entered visit date on the form - it's reliable and
+  // unaffected by any bulk-import timestamp bug. Fall back to server
+  // timestamps if form.date is missing.
+  const formDate = p.form?.date;
+  const dms = formDate ? Date.parse(formDate) : NaN;
+  if (!isNaN(dms)) return dms;
   const t = p.created_at || p.createdAt || p.updated_at || p.savedAt;
   const ms = t ? Date.parse(t) : 0;
   return isNaN(ms) ? 0 : ms;
 }
 function formatCreatedAt(p){
+  // Show the doctor-entered visit date (reliable) instead of the server's
+  // created_at, which can be wrong for bulk-imported patients.
+  const formDate = p.form?.date;
+  if (formDate) {
+    const d = new Date(formDate);
+    if (!isNaN(d.getTime())) {
+      return d.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+    }
+  }
   const t = p.created_at || p.createdAt;
   if (!t) return '';
   const d = new Date(t);
