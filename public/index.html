@@ -1309,6 +1309,10 @@ savePatientBtn.addEventListener('click', ()=>{
   // Temporary container
   const container = document.createElement("div");
   container.innerHTML = rxHtml;
+  container.style.width = "190mm";   // A4 (210mm) minus 10mm left + 10mm right margin
+  container.style.boxSizing = "border-box";
+  container.style.position = "fixed";
+  container.style.left = "-9999px";  // keep it off-screen but still rendered
   document.body.appendChild(container);
 
 const opt = {
@@ -1317,7 +1321,8 @@ const opt = {
   image: { type: 'jpeg', quality: 1 },
   html2canvas: { 
     scale: 1.5,
-    scrollY: 0
+    scrollY: 0,
+    windowWidth: container.scrollWidth
   },
   jsPDF: { 
     unit: 'mm', 
@@ -1521,7 +1526,7 @@ ${esc(v.next)}
   .rx-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
   .rx-table th { background: #fafafa; padding: 8px; border: 1px solid #ddd; }
   .rx-table td { padding: 8px; border: 1px solid #ddd; }
-  .footer { margin-top: 30px; color: #666; font-size: 13px; }
+  .footer { margin-top: 30px; color: #666; font-size: 13px; padding-right: 6mm; box-sizing: border-box; }
 </style>
 </head>
 
