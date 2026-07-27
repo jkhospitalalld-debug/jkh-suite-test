@@ -1311,8 +1311,6 @@ savePatientBtn.addEventListener('click', ()=>{
   container.innerHTML = rxHtml;
   container.style.width = "190mm";   // A4 (210mm) minus 10mm left + 10mm right margin
   container.style.boxSizing = "border-box";
-  container.style.position = "fixed";
-  container.style.left = "-9999px";  // keep it off-screen but still rendered
   document.body.appendChild(container);
 
 const opt = {
