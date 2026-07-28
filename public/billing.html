@@ -456,6 +456,7 @@ let payments=[];     // {date, amount, note}
 let currentBillNo='';
 let saveTimer=null;
 let dirty=false;
+let backupBannerDismissed=false;
 
 function $(id){return document.getElementById(id);}
 
@@ -881,6 +882,7 @@ function exportJSON(){
   const dateStr=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   download(`billing(${dateStr}).json`, JSON.stringify(data,null,2), 'application/json');
   try{ localStorage.setItem(K_LASTBACKUP,new Date().toISOString()); localStorage.setItem(K_UNBACKED,'0'); }catch(e){}
+  backupBannerDismissed=false;
   toast('Backup downloaded.');
   dismissBanner();
   updateBackupUI();
@@ -942,14 +944,14 @@ function updateBackupUI(){
   const unbacked=parseInt(localStorage.getItem(K_UNBACKED)||'0');
   $('lastBackupText').textContent = last ? `Last backup: ${new Date(last).toLocaleString()}` : 'No backup taken yet';
   const daysSince = last ? (Date.now()-new Date(last).getTime())/86400000 : 999;
-  if(unbacked>=5 || daysSince>=3){
+  if((unbacked>=5 || daysSince>=3) && !backupBannerDismissed){
     $('backupMsg').textContent = last
       ? `${unbacked} bill(s) saved since your last backup.`
       : `You have unbacked-up bills. Your Save is stored only in this browser.`;
     $('backupBanner').style.display='flex';
   }
 }
-function dismissBanner(){ $('backupBanner').style.display='none'; }
+function dismissBanner(){ $('backupBanner').style.display='none'; backupBannerDismissed=true; }
 
 /* ---------------------------------------------------------
    PDF GENERATION — built by hand, no external library and
