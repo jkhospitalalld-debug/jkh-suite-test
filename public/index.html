@@ -1810,7 +1810,13 @@ if(!confirm("Existing data merge hoga. Continue?")) {
 
   reader.onload = function (e) {
     try {
-      const importedData = JSON.parse(e.target.result);
+      let importedData = JSON.parse(e.target.result);
+
+      // Accept either a plain array (this app's own export) or the
+      // {patients:[...], bills:[...]} wrapped format used by jkh-cloud-xray's export.
+      if (!Array.isArray(importedData) && importedData && Array.isArray(importedData.patients)) {
+        importedData = importedData.patients;
+      }
 
       if (!Array.isArray(importedData)) {
         alert("Invalid JSON format ❌");
