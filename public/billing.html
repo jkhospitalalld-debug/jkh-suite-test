@@ -915,6 +915,13 @@ function importJSON(file){
       updateTrashToggle();
       renderRegister();
       updateBackupUI();
+      // Push imported bills to the server too, so OPD-form "Billing" auto-recall
+      // (which checks /api/bills on the server) can find them across devices.
+      Promise.all(incoming.map(b =>
+        apiFetch('/api/bills', { method:'POST', body: b }).catch(err=>{
+          console.warn('Server sync failed for imported bill', b.no, err.message);
+        })
+      )).then(()=>{ console.log('Imported bills synced to server.'); });
     }else{
       toast('Restore failed — storage error.',true);
     }
