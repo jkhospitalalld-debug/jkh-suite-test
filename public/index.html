@@ -2039,8 +2039,8 @@ ${xrays.length ? `
 </div>
 ` : ''}
 
-<div class="footer" style="margin-top:22px;text-align:right;page-break-inside:avoid;break-inside:avoid;">
-  <img src="${SIGN_STAMP_DATA_URL}" style="width:120px;height:80px;object-fit:contain;display:inline-block;vertical-align:middle" alt="Sign & Stamp">
+<div class="footer" style="margin-top:22px;text-align:center;page-break-inside:avoid;break-inside:avoid;">
+  <img src="${SIGN_STAMP_DATA_URL}" style="width:110px;height:74px;object-fit:contain;display:inline-block;vertical-align:middle" alt="Sign & Stamp">
 </div>
 
 </body>
@@ -3179,7 +3179,7 @@ function generateBillPDF(bill){
   const colProc=margin+35, colRate=W-margin-160, colQty=W-margin-95, colTotal=W-margin-60;
   let pagesContent=[], texts=[], lines=[], y=H-60;
 
-  function flushPage(){ pagesContent.push({texts,lines,footerImage:{x:W-165,y:28,w:115,h:77}}); texts=[]; lines=[]; }
+  function flushPage(){ pagesContent.push({texts,lines,footerImage:{x:(W-105)/2,y:28,w:105,h:70}}); texts=[]; lines=[]; }
   function addText(text,x,yy,font,size){ texts.push({text:String(text),x,y:yy,font,size}); }
   function addLine(x1,y1,x2,y2){ lines.push({x1,y1,x2,y2}); }
   function drawTableHeader(){
