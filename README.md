@@ -1,86 +1,50 @@
-# JKH Suite — TEST environment
+# JKH Cloud X-Ray — TEST copy (billing fixes)
 
-This is a **completely separate copy** of your app — different GitHub repo, different
-Cloudflare Worker, different D1 database. Nothing here can affect your live app
-(currently running as Worker `jkh-suite-db`). Use this to try out the new shared
-procedure list feature safely before touching real patient/billing data.
+This is a **separate test copy** of your live `jkh-cloud-xray` app — its own GitHub
+repo, its own Cloudflare Worker (`jkh-cloud-xray-test`), its own D1 database
+(`jkh-cloud-xray-test-db`). Nothing here touches your live app's data.
 
-## What's different from your live app
+Use this to check the recent billing fixes before they go into the live app:
+- Bill number = UHID (extra bills for the same patient = UHID+A, UHID+B, ...)
+- UHID (and its linked bill) now stays firm once assigned — editing the visit date
+  no longer silently generates a new UHID
 
-- One shared procedure list (`master_procedures` table) used by both the OPD form and
-  Billing, instead of two separate hardcoded lists that could drift apart
-- A **"⚙ Procedures"** button on the Billing page to add/edit/delete procedures from
-  inside the app — no more GitHub editing for this
-- Includes all 135 procedures from your current Billing page, including your JK001–JK018
-  custom additions
-- **New: X-Ray images on the OPD form** — "📷 Add X-Ray" button, works with your phone's
-  or computer's camera or gallery, auto-compresses before saving, shows a thumbnail
-  gallery per patient, click a thumbnail to view full-size, ✕ to delete. **Images are
-  saved locally in the browser on whichever computer you're using (via IndexedDB) — not
-  in the cloud database.** This matches your workflow: X-rays only needed in-clinic, so
-  no cloud storage service (and no card requirement) needed for this. Note: an X-ray
-  saved on the clinic computer will only show up on that same computer/browser, not on
-  other devices — this is intentional given how you described using them.
-- **New: "⚙ Medicines" button on the OPD form** — add or delete medicines (and even
-  whole new categories) from inside the app, same idea as the Procedures manager.
-  Includes all 51 medicines from your current form as a starting point.
+## Set up the test environment
 
-## 1. Set up the test environment
-
-1. **New GitHub repo** — e.g. name it `jkh-suite-test`. Upload every file from this
-   project into it (drag-and-drop all files/folders via "Add file → Upload files").
+1. **New GitHub repo** — e.g. `jkh-cloud-xray-test`. Upload every file from this
+   project into it (drag-and-drop via "Add file → Upload files").
 
 2. **New D1 database:**
    - Cloudflare dashboard → Workers & Pages → D1 → Create Database
-   - Name it `jkh-suite-test-db` (matches what's already set in `wrangler.toml`)
+   - Name it `jkh-cloud-xray-test-db`
    - Copy the Database ID it gives you
 
-3. **Update `wrangler.toml`** on GitHub: replace `PASTE_YOUR_DATABASE_ID_HERE` with
-   that ID. Commit.
+3. **Update `wrangler.toml`** on GitHub: replace `PASTE_YOUR_NEW_DATABASE_ID_HERE`
+   with that ID. Commit.
 
 4. **Connect the repo to a new Cloudflare Worker:**
    - Workers & Pages → Create → Workers → **Import a repository**
-   - Pick your new `jkh-suite-test` repo
-   - This creates a new Worker, separate from your live one
+   - Pick your new `jkh-cloud-xray-test` repo
+   - This creates a new Worker (`jkh-cloud-xray-test`), separate from your live one
 
-5. **Create the tables:** D1 → jkh-suite-test-db → Console. The D1 Console often fails
-   if you paste multiple `CREATE TABLE` statements at once — run each statement in
-   `schema.sql` **one at a time** (copy one block, run, clear, copy the next, repeat).
+5. **Create the tables:** D1 → jkh-cloud-xray-test-db → Console. Run each statement
+   in `schema.sql` **one at a time** (the Console often fails on multiple
+   `CREATE TABLE` statements pasted together).
 
-6. **Load the procedure list:** same Console, paste in the full contents of
-   `seed_procedures.sql`, run it. (This loads all 135 procedures — including your
-   custom JK ones — into the new shared table.)
-
-6b. **Load the medicine list:** same Console, paste in the full contents of
-   `seed_medicines.sql`, run it. (Loads all 51 medicines from your current form.)
+6. **Load starter data:** same Console — paste and run `seed_procedures.sql`, then
+   `seed_medicines.sql`.
 
 7. Visit your new Worker's URL (something like
-   `https://jkh-suite-test.<yoursubdomain>.workers.dev`) — should show the OPD form,
-   with test data only (empty patients/bills to start).
+   `https://jkh-cloud-xray-test.<yoursubdomain>.workers.dev`) — should show the OPD
+   form, empty (no real patient data).
 
-## 2. Test it thoroughly
+## Test these specifically
 
-Things worth checking:
-- Create a test patient, add procedures, save — confirm it syncs
-- Click Billing from that patient — confirm it links correctly, procedures list matches
-- Open "⚙ Procedures" — try adding, editing, deleting a procedure — confirm it shows
-  up in both the OPD form's Master List and Billing's dropdown afterward
-- Add a part-payment, check the balance/status badge
-- Try the Register, PDF export, Import Backup — whatever matters most to your workflow
+- Create a test patient → confirm a bill auto-appears with number = UHID
+- Change the visit date field afterward → confirm the UHID does **not** change
+- Click "＋ New Bill for this Patient" a couple of times → confirm bill numbers
+  come out as UHID+A, UHID+B, ...
+- Add procedures + a part-payment on a bill → confirm balance/status look right
 
-Report anything odd back here and we'll fix it in this test copy before touching your
-real data.
-
-## 3. Once confirmed — migrating real data over
-
-When you're happy with the test copy, come back and tell me. We'll do this carefully:
-
-1. Export your **live app's** patients and bills as JSON backups (using the existing
-   Export Backup buttons on each page)
-2. Import those backups into this test app (which then effectively becomes your new
-   live app) — or, if you'd rather keep the same URL your staff already use, we instead
-   apply just the *code changes* (not a new repo/database) to your current live app,
-   now that we know they work.
-
-We'll decide together which of those two paths makes more sense once testing is done —
-no data gets moved until you say so.
+Report anything odd and it'll get fixed here first — nothing moves to your live app
+until you confirm it's working.

@@ -55,6 +55,42 @@ app.delete('/api/medicines/:id', async (c) => {
 });
 
 /* =========================================================
+   X-RAY IMAGES (per patient, stored as base64 in D1)
+   ========================================================= */
+
+// All X-rays across all patients - used by Export Backup / Export Selected
+// so X-ray images travel with the JSON backup, not just patients + bills.
+app.get('/api/xrays', async (c) => {
+  const { results } = await c.env.DB
+    .prepare('SELECT id, uhid, filename, data, uploaded_at FROM xray_images ORDER BY uploaded_at')
+    .all();
+  return c.json(results);
+});
+
+app.get('/api/xrays/:uhid', async (c) => {
+  const { results } = await c.env.DB
+    .prepare('SELECT id, uhid, filename, data, uploaded_at FROM xray_images WHERE uhid = ? ORDER BY uploaded_at')
+    .bind(c.req.param('uhid'))
+    .all();
+  return c.json(results);
+});
+
+app.post('/api/xrays', async (c) => {
+  const { uhid, filename, data } = await c.req.json();
+  if (!uhid || !data) return c.json({ error: 'uhid and data are required' }, 400);
+  const now = new Date().toISOString();
+  const result = await c.env.DB.prepare(
+    'INSERT INTO xray_images (uhid, filename, data, uploaded_at) VALUES (?,?,?,?)'
+  ).bind(uhid, filename || '', data, now).run();
+  return c.json({ ok: true, id: result.meta.last_row_id, uploaded_at: now });
+});
+
+app.delete('/api/xrays/:id', async (c) => {
+  await c.env.DB.prepare('DELETE FROM xray_images WHERE id = ?').bind(c.req.param('id')).run();
+  return c.json({ ok: true });
+});
+
+/* =========================================================
    PATIENTS (OPD form)
    ========================================================= */
 
@@ -83,7 +119,7 @@ app.post('/api/patients', async (c) => {
   await c.env.DB.prepare(
     `INSERT INTO patients (id, name, date, data, created_at, updated_at) VALUES (?,?,?,?,?,?)
      ON CONFLICT(id) DO UPDATE SET name=excluded.name, date=excluded.date, data=excluded.data, updated_at=excluded.updated_at`
-  ).bind(body.id, name, date, data, body.created_at || body.createdAt || now, now).run();
+  ).bind(body.id, name, date, data, now, now).run();
   return c.json({ ok: true, id: body.id, updated_at: now });
 });
 
@@ -98,8 +134,7 @@ app.post('/api/patients/bulk', async (c) => {
   const batch = arr.filter((p) => p.id).map((p) => stmt.bind(
     p.id, p.form?.name || '', p.form?.date || '',
     JSON.stringify({ form: p.form || {}, items: p.items || [], meds: p.meds || [], visits: p.visits || [] }),
-    p.created_at || p.createdAt || now,
-    now
+    p.createdAt || p.savedAt || now, now
   ));
   if (batch.length) await c.env.DB.batch(batch);
   return c.json({ ok: true, count: batch.length });
@@ -171,6 +206,22 @@ app.post('/api/bills', async (c) => {
      ON CONFLICT(no) DO UPDATE SET name=excluded.name, date=excluded.date, data=excluded.data, deleted=0, updated_at=excluded.updated_at`
   ).bind(bill.no, bill.name || '', bill.date || '', JSON.stringify(bill), now).run();
   return c.json({ ok: true, no: bill.no, updated_at: now });
+});
+
+// Safe auto-create: used only to make sure a bill row exists for a UHID.
+// Unlike POST /api/bills (which is a real upsert used for genuine edits),
+// this NEVER overwrites an existing bill - if a bill with this number
+// already exists (for any reason, including a stale/incorrect "no bill
+// found" check on the client), it's left completely untouched.
+app.post('/api/bills/ensure', async (c) => {
+  const bill = await c.req.json();
+  if (!bill.no) return c.json({ error: 'Missing bill no' }, 400);
+  const now = new Date().toISOString();
+  await c.env.DB.prepare(
+    `INSERT INTO bills (no, name, date, data, deleted, updated_at) VALUES (?,?,?,?,0,?)
+     ON CONFLICT(no) DO NOTHING`
+  ).bind(bill.no, bill.name || '', bill.date || '', JSON.stringify(bill), now).run();
+  return c.json({ ok: true, no: bill.no });
 });
 
 // Soft delete (move to trash) / restore

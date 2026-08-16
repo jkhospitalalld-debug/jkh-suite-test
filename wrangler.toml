@@ -1,4 +1,4 @@
-name = "jkh-suite-test"
+name = "jkh-cloud-xray-test"
 main = "src/index.js"
 compatibility_date = "2024-11-01"
 
@@ -10,5 +10,5 @@ binding = "ASSETS"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "jkh-suite-test-db"
+database_name = "jkh-cloud-xray-test-db"
 database_id = "33f21629-053a-4f00-ab03-d737bb1286fb"
