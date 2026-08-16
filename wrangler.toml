@@ -11,4 +11,4 @@ binding = "ASSETS"
 [[d1_databases]]
 binding = "DB"
 database_name = "jkh-cloud-xray-test-db"
-database_id = "9d4394d0-35cf-45f3-b0c8-eb08964f95fa"
+database_id = "33f21629-053a-4f00-ab03-d737bb1286fb"
